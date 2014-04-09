@@ -1,0 +1,15 @@
+%h1
+	#{@corp} Point Tracker
+%h2
+	#{@month} #{@year}
+
+%table
+	%tr
+		%th
+			Blah
+	- @events.each do |event|
+		%tr
+			%td= event
+
+Page generated at #{@now} 
+%a{:href => $base_url + '/admin/'} [Admin]

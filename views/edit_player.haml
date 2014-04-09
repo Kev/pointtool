@@ -1,0 +1,19 @@
+%h1 Edit #{@player.name}
+
+%form{ :action => $base_url + "/edit_player/" + @player.id.to_s + "/", :method => "post"}
+	%fieldset
+		%label Name:
+		%input{:type => "text", :name =>"name", :value => @player.name}
+		%input{:type => "submit", :value => "Change Name"}
+
+%h3 Characters
+
+%table
+	%tr
+		%th Name
+		%th
+	- @player.characters.each do |character|
+		%tr
+			%td= character.name
+			%td
+				%a{:href => $base_url + '/delete_character/' + character.id.to_s + '/'} Delete

@@ -1,0 +1,20 @@
+%table
+	%tr
+		%th Player/Main
+		%th Characters
+		%th
+	- @players.each do |player|
+		%tr
+			%td= player.name
+			%td
+			- player.characters.each do |character|
+				=character.name 
+			%td
+				%a{:href => $base_url + '/edit_player/' + player.id.to_s + '/'} Edit
+
+
+%form{ :action => $base_url + "/add_player/", :method => "post"}
+	%fieldset
+		%label Name:
+		%input{:type => "text", :name =>"name"}
+		%input{:type => "submit", :value => "Add Player"}
