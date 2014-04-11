@@ -7,8 +7,9 @@
 		%tr
 			%td= player.name
 			%td
-			- player.characters.each do |character|
-				=character.name 
+				- player.getCharacters.each do |character|
+					=character.name
+					, 
 			%td
 				%a{:href => $base_url + '/edit_player/' + player.id.to_s + '/'} Edit
 

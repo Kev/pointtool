@@ -15,6 +15,12 @@ class Player
 	property :id, Serial
 	property :name, String
 	has n, :characters
+
+	def getCharacters()
+		activeCharacters = []
+		characters.each{|x| activeCharacters << x if x.active}
+		return activeCharacters
+	end
 end
 
 class Attendance
@@ -28,6 +34,7 @@ class Character
 	include DataMapper::Resource
 	property :id, Serial
 	property :name, String
+	property :active, Boolean
 	belongs_to :player
 	has n, :attendances
 	has n, :events, :through => :attendances
@@ -75,10 +82,28 @@ post '/add_player/' do
 	@name = params[:name]
 	existing = Player.first(:name => @name)
 	if existing
-		haml :add_player_fail
+		@reason = "You tried to add a player that already exists (name=" + @name + ")"
+		haml :error
 	else
 		Player.create(:name => @name)
 		haml :add_player_success
+	end
+end
+
+post '/add_character/' do
+	@name = params[:name]
+	existing = Character.first(:name => @name, :active => true)
+	@player = Player.first(:id => params[:player_id])
+	if existing
+		@reason = "You tried to add a character that already exists (name=" + @name + ")"
+		haml :error
+	elsif not @player
+		@reason = "Can't find the player you're trying to add a character to (id=" + params[:player_id] + ")"
+		haml :error
+	else
+		Character.create(:name => @name, :player => @player, :active => true)
+		@message = "Character '" + @name + "' added to " + @player.name
+		haml :edit_player
 	end
 end
 
@@ -87,11 +112,26 @@ get '/admin/' do
 	haml :admin
 end
 
+get '/delete_character/:id/' do
+	id = params[:id]
+	character = Character.first(:id => id)
+	if character and checkIsAdmin()
+		character.update(:active => false)
+		@message = "Character " + character.name + " removed."
+		@player = character.player
+		haml :edit_player
+	else
+		@reason = "Character doesn't exist"
+		haml :error
+	end
+end
+
 post '/edit_player/:id/' do
 	id = params[:id]
 	@player = Player.first(:id => id)
 	if @player and checkIsAdmin()
 		@player.update(:name => params[:name])
+		@message = "Name updated"
 		haml :edit_player
 	else
 		@reason = "You tried to edit a player that doesn't exist (id=" + id + ")"
@@ -106,7 +146,6 @@ get '/edit_player/:id/' do
 		haml :edit_player
 	else
 		@reason = "You tried to edit a player that doesn't exist (id=" + id + ")"
-		haml :error
 	end
 end
 
