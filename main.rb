@@ -5,6 +5,7 @@ require 'sinatra'
 require 'haml'
 require 'data_mapper'
 require 'date'
+require 'time'
 
 $base_url = ""
 $event_types = ["C5 Site", "C3 Site", "Gas", "PVP", "Other"]
@@ -45,16 +46,16 @@ class Event
 	include DataMapper::Resource
 	property :id, Serial
 	property :description, String
-	property :when, DateTime
+	property :event_time, DateTime
 	property :corner_value, Float
-	property :type, String
+	property :event_type, String
 	has n, :attendances
 	has n, :characters, :through => :attendances
 
 	def getCharactersString()
 		result = ""
 		characters.each{|x|
-			result += ", " if not result.empty
+			result += ", " if not result.empty?
 			result += x.name}
 		return result
 	end
@@ -96,10 +97,46 @@ get '/add_event/' do
 	haml :edit_event
 end
 
+post '/add_event/' do
+	description = params[:description]
+	if params[:event_time] and not params[:event_time].empty?
+		begin
+			event_time = Time.parse(params[:event_time]).utc
+		rescue
+			@reason = "Invalid time format: " + params[:event_time] + $!.to_s
+			return haml :error
+		end
+	else
+		event_time = Time.new.utc
+	end
+	
+	corner_value = params[:corner_value].to_f
+	event_type = params[:event_type]
+	characters_string = params[:characters]
+	if description.empty? or not $event_types.include?(event_type) or characters_string.empty? or corner_value <= 0.0 then
+		@reason = "Fill out all the fields"
+		return haml :error
+	end
+	characters = []
+	invalid_characters = []
+	characters_string.split(",").each {|x|
+		character = Character.first(:name => x, :active => true)
+		if character then characters << character else invalid_characters << x end}
+	if not invalid_characters.empty? then
+		@reason = "Character doesn't exist (" + invalid_characters.join(", ") + ")"
+		return haml :error
+	end
+	@event = Event.create(:description => description, :event_time => event_time, :corner_value => corner_value, :event_type => event_type, :characters => characters)
+	@message = "Event created"
+	@create_or_edit = "Edit"
+	@submit_relative_url = "/edit_event/"
+	haml :edit_event
+end
+
 post '/add_player/' do
 	@name = params[:name]
 	existing = Player.first(:name => @name)
-	if existing
+	if existing or not checkIsAdmin()
 		@reason = "You tried to add a player that already exists (name=" + @name + ")"
 		haml :error
 	else
@@ -112,7 +149,7 @@ post '/add_character/' do
 	@name = params[:name]
 	existing = Character.first(:name => @name, :active => true)
 	@player = Player.first(:id => params[:player_id])
-	if existing
+	if existing or not checkIsAdmin()
 		@reason = "You tried to add a character that already exists (name=" + @name + ")"
 		haml :error
 	elsif not @player
