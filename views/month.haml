@@ -10,6 +10,7 @@
 		%th Description
 		%th Corner Value
 		%th Characters
+		%th When
 		%th
 	- @events.each do |event|
 		%tr
@@ -17,12 +18,26 @@
 			%td= event.description
 			%td= event.corner_value
 			%td= event.getCharactersString()
+			%td= event.event_time.to_s
 			%td
 				%a{:href => $base_url + '/edit_event/' + event.id.to_s + "/"} Edit
 %p
 	%a{:href => $base_url + '/add_event/'} [Add Event]
 
-%h3 Point tallies
+%h3 
+	Point tallies (
+	=@players.count
+	players )
+%table
+	%tr
+		%th Player
+		%th Events
+		%th Points
+	- @players.each do |player|
+		%tr
+			%td= player.name
+			%td= player.getEventsFrom(@events)
+			%td= player.getPointsFrom(@events)
 
 %p
 	Page generated at #{@now}

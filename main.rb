@@ -23,6 +23,25 @@ class Player
 		characters.each{|x| activeCharacters << x if x.active}
 		return activeCharacters
 	end
+
+	def getEventsParticipatedIn(events)
+		participatedEvents = []
+		events.each{|event| 
+			participated = false
+			event.characters.each{|character| participated = true if character.player == self}
+			participatedEvents << event if participated}
+		return participatedEvents
+	end
+
+	def getEventsFrom(events)
+		return getEventsParticipatedIn(events).count
+	end
+
+	def getPointsFrom(events)
+		dates = []
+		getEventsParticipatedIn(events).each{|event| dates << event.event_time.to_date}
+		return dates.uniq.count
+	end
 end
 
 class Attendance
@@ -72,10 +91,7 @@ Character.auto_upgrade!
 
 def getPlayersActiveIn(events)
 	players = []
-	events.all{|event|
-		event.characters.all{|character|
-			player = character.player
-			players << player if not players.include?(player)}}
+	events.each{|event| event.characters.each{|character| players << character.player if not players.include?(character.player)}}
 	return players
 end
 
@@ -86,6 +102,7 @@ end
 def getMonthReport(monthNumber, year)
 	@month = Date::MONTHNAMES[monthNumber]
 	@events = getEvents(@month, year)
+	@players = getPlayersActiveIn(@events)
 	@corp = "Hidden Agenda"
 	@now = DateTime.now.to_s
 	haml :month
@@ -145,7 +162,7 @@ post '/add_event/' do
 end
 
 get '/edit_event/:id/' do
-	@event = Event.first(:id => id)
+	@event = Event.first(:id => params[:id])
 	if not @event
 		@reason = "Event " + id + " doesn't exist"
 		return haml :error
