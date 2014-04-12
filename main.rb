@@ -49,6 +49,8 @@ class Event
 	property :event_time, DateTime
 	property :corner_value, Float
 	property :event_type, String
+
+	#belongs_to :player, 'approved_by', :required => false
 	has n, :attendances
 	has n, :characters, :through => :attendances
 
@@ -68,8 +70,17 @@ Player.auto_upgrade!
 Attendance.auto_upgrade!
 Character.auto_upgrade!
 
+def getPlayersActiveIn(events)
+	players = []
+	events.all{|event|
+		event.characters.all{|character|
+			player = character.player
+			players << player if not players.include?(player)}}
+	return players
+end
+
 def getEvents(month, year)
-	Event.all(:order => [:when], )
+	Event.all(:order => [:event_time], )
 end
 
 def getMonthReport(monthNumber, year)
@@ -131,6 +142,22 @@ post '/add_event/' do
 	@create_or_edit = "Edit"
 	@submit_relative_url = "/edit_event/"
 	haml :edit_event
+end
+
+get '/edit_event/:id/' do
+	@event = Event.first(:id => id)
+	if not @event
+		@reason = "Event " + id + " doesn't exist"
+		return haml :error
+	end
+	if checkIsAdmin() # or not approved but you're the owner
+		@create_or_edit = "Edit"
+		@submit_relative_url = "/edit_event/"
+		haml :edit_event
+	else
+		@reason = "No access"
+		return haml :error
+	end
 end
 
 post '/add_player/' do

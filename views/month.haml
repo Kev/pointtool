@@ -3,15 +3,26 @@
 %h2
 	#{@month} #{@year}
 
+%h3 Events
 %table
 	%tr
+		%th Type
+		%th Description
+		%th Corner Value
+		%th Characters
 		%th
-			Blah
 	- @events.each do |event|
 		%tr
-			%td= event
+			%td= event.event_type
+			%td= event.description
+			%td= event.corner_value
+			%td= event.getCharactersString()
+			%td
+				%a{:href => $base_url + '/edit_event/' + event.id.to_s + "/"} Edit
 %p
 	%a{:href => $base_url + '/add_event/'} [Add Event]
+
+%h3 Point tallies
 
 %p
 	Page generated at #{@now}
