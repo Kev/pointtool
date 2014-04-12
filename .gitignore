@@ -36,3 +36,4 @@ build/
 
 #pointtracker-specific stuff
 points.db
+.pointtool.sublime-workspace

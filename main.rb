@@ -130,7 +130,7 @@ post '/add_event/' do
 	end
 	characters = []
 	invalid_characters = []
-	characters_string.split(",").each {|x|
+	characters_string.split(", ").each {|x|
 		character = Character.first(:name => x, :active => true)
 		if character then characters << character else invalid_characters << x end}
 	if not invalid_characters.empty? then
