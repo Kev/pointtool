@@ -1,0 +1,22 @@
+%h1 #{@create_or_edit} Event
+
+- if @message
+	%h3=@message
+
+%form{ :action => $base_url + @submit_relative_url, :method => "post"}
+	%fieldset
+		%label Type
+		%select{:name => "event_type"}
+			- $event_types.each do |type|
+				%option{:value => type}= type
+		%label Description:
+		%input{:type => "text", :name =>"description", :value => @event ? @event.description : ""}
+		%label Corner value:
+		%input{:type => "text", :name =>"corner_value", :value => @event ? @event.corner_value : ""}
+		%label When:
+		%input{:type => "text", :name =>"when", :value => @event ? @event.when.to_s : ""}
+		%label Characters:
+		%input{:type => "text", :name =>"characters", :value => @event ? @event.getCharactersString : ""}
+		%input{:type => "hidden", :name => "event_id", :value => @event ? @event.id : ""}
+
+		%input{:type => "submit", :value => @create_or_edit + " Event"}

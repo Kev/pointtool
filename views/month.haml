@@ -10,6 +10,9 @@
 	- @events.each do |event|
 		%tr
 			%td= event
+%p
+	%a{:href => $base_url + '/add_event/'} [Add Event]
 
-Page generated at #{@now} 
-%a{:href => $base_url + '/admin/'} [Admin]
+%p
+	Page generated at #{@now}
+	%a{:href => $base_url + '/admin/'} [Admin]

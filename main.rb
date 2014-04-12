@@ -7,6 +7,7 @@ require 'data_mapper'
 require 'date'
 
 $base_url = ""
+$event_types = ["C5 Site", "C3 Site", "Gas", "PVP", "Other"]
 
 DataMapper::setup(:default, "sqlite3://#{Dir.pwd}/points.db")
 
@@ -34,7 +35,7 @@ class Character
 	include DataMapper::Resource
 	property :id, Serial
 	property :name, String
-	property :active, Boolean
+	property :active, Boolean, :default => true
 	belongs_to :player
 	has n, :attendances
 	has n, :events, :through => :attendances
@@ -45,8 +46,18 @@ class Event
 	property :id, Serial
 	property :description, String
 	property :when, DateTime
+	property :corner_value, Float
+	property :type, String
 	has n, :attendances
 	has n, :characters, :through => :attendances
+
+	def getCharactersString()
+		result = ""
+		characters.each{|x|
+			result += ", " if not result.empty
+			result += x.name}
+		return result
+	end
 end
 
 DataMapper.finalize
@@ -76,6 +87,13 @@ get '/month/:year/:month/' do
 	@month = params[:month]
 	@year = params[:year]
 	getMonthReport(@month, @year)
+end
+
+get '/add_event/' do
+	Player.create(:name => @name)
+	@create_or_edit = "Create"
+	@submit_relative_url = "/add_event/"
+	haml :edit_event
 end
 
 post '/add_player/' do
