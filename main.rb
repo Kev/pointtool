@@ -172,7 +172,6 @@ get '/month/:year/:month/' do
 end
 
 get '/add_event/' do
-	Player.create(:name => @name)
 	@create_or_edit = "Create"
 	@submit_relative_url = "/add_event/"
 	@logged_in_player = getCurrentPlayer()
