@@ -1,3 +1,32 @@
+%h3 Pending Events
+%table
+	%tr
+		%th Type
+		%th Description
+		%th Corner Value
+		%th Characters
+		%th When
+		%th Submitted By
+		%th
+		%th
+	- @pendingEvents.each do |event|
+		%tr
+			%td= event.event_type
+			%td= event.description
+			%td= event.corner_value
+			%td 
+				- event.characters.each do |character|
+					%span.tooltipable{:title => character.player.name, "data-toggle" => "tooltip", "data-placement" => "top"} 
+						=character.name
+
+			%td= event.event_time.to_s
+			%td= event.submission.player.name
+			%td
+				%a{:href => $base_url + '/edit_event/' + event.id.to_s + "/"} Edit
+			%td
+				%a{:href => $base_url + '/approve_event/' + event.id.to_s + "/"} Approve
+
+%h3 Players
 %table
 	%tr
 		%th Player/Main
@@ -20,3 +49,4 @@
 		%label Name:
 		%input{:type => "text", :name =>"name"}
 		%input{:type => "submit", :value => "Add Player"}
+

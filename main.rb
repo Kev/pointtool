@@ -120,6 +120,10 @@ def getPlayersActiveIn(events)
 	return players
 end
 
+def getPendingEvents()
+	Event.all(:order => [:event_time], :approval => nil)
+end
+
 def getEvents(month, year)
 	monthStart = DateTime.new(year, month, 1)
 	monthEnd = DateTime.new(month == 12 ? year + 1 : year, month + 1 % 12)
@@ -297,6 +301,25 @@ post '/add_character/' do
 	end
 end
 
+def renderAdminPage()
+	@pendingEvents = getPendingEvents()
+	@players = Player.all(:order => [:name], )
+	haml :admin
+end
+
+get '/approve_event/:id/' do
+	@logged_in_player = getCurrentPlayer()
+	@now = nowString()
+	if not checkIsAdmin()
+		@reason = "Not Admin"
+		return haml :error
+	end
+	event = Event.first(:id => params[:id])
+	Approval.create(:player => @logged_in_player, :event => event)
+	renderAdminPage()
+end
+
+
 get '/admin/' do
 	@logged_in_player = getCurrentPlayer()
 	@now = nowString()
@@ -304,8 +327,7 @@ get '/admin/' do
 		@reason = "Not Admin"
 		return haml :error
 	end
-	@players = Player.all(:order => [:name], )
-	haml :admin
+	renderAdminPage()
 end
 
 get '/delete_character/:id/' do

@@ -29,7 +29,8 @@
 			%td= event.event_time.to_s
 			%td
 				%a{:href => $base_url + '/edit_event/' + event.id.to_s + "/"} Edit
-%p
+%div Plus #{@pendingEventCount} pending events.
+%div
 	%a{:href => $base_url + '/add_event/'} [Add Event]
 
 %h3 
