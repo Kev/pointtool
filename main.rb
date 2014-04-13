@@ -153,6 +153,7 @@ def getMonthReport(monthNumber, year)
 	@point_total = 0
 	@players.each{|player| @point_total += player.getPointsFrom(@events)}
 	@isk_point_average = @point_total > 0 ? @isk_total / @point_total : 0
+	@allow_edit = checkIsAdmin()
 	haml :month
 end
 
@@ -302,7 +303,7 @@ post '/add_character/' do
 end
 
 def renderAdminPage()
-	@pendingEvents = getPendingEvents()
+	@events = getPendingEvents()
 	@players = Player.all(:order => [:name], )
 	haml :admin
 end
@@ -322,6 +323,8 @@ end
 
 get '/admin/' do
 	@logged_in_player = getCurrentPlayer()
+	@allow_approval = true
+	@allow_edit = true
 	@now = nowString()
 	if not checkIsAdmin()
 		@reason = "Not Admin"

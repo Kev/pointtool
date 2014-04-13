@@ -7,28 +7,7 @@
 %div Total points earned: #{@point_total}
 %div Average isk contributed per point: #{@isk_point_average}
 
-%h3 Events
-%table
-	%tr
-		%th Type
-		%th Description
-		%th Corner Value
-		%th Characters
-		%th When
-		%th
-	- @events.each do |event|
-		%tr
-			%td= event.event_type
-			%td= event.description
-			%td= event.corner_value
-			%td 
-				- event.characters.each do |character|
-					%span.tooltipable{:title => character.player.name, "data-toggle" => "tooltip", "data-placement" => "top"} 
-						=character.name
-
-			%td= event.event_time.to_s
-			%td
-				%a{:href => $base_url + '/edit_event/' + event.id.to_s + "/"} Edit
+= haml :events_partial
 %div Plus #{@pendingEventCount} pending events.
 %div
 	%a{:href => $base_url + '/add_event/'} [Add Event]
