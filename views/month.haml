@@ -1,5 +1,4 @@
-%h1
-	#{@corp} Point Tracker
+
 %h2
 	#{@month} #{@year}
 
@@ -39,6 +38,3 @@
 			%td= player.getEventsFrom(@events)
 			%td= player.getPointsFrom(@events)
 
-%p
-	Page generated at #{@now}
-	%a{:href => $base_url + '/admin/'} [Admin]
