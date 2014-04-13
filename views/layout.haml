@@ -7,7 +7,7 @@
 		-# Taking this CSS strangeness from https://github.com/czarneckid/twitter-bootstrap-examples-haml/blob/master/views/starter-template.haml
 		:css
 			body {
-				padding-top: 60px; /* 60px to make the container go all the way to the bottom of the topbar */
+				padding-top: 110px; /* 60px to make the container go all the way to the bottom of the topbar */
 			}
 		-# %link{:href => "/css/bootstrap-responsive.css", :rel => "stylesheet"}/
 		%link{:href => "/css/tracker.css", :rel => "stylesheet"}/
@@ -33,12 +33,11 @@
 							%li
 								%a{:href => $base_url + "/admin/"} Admin
 					/ /.nav-collapse
-		}
 		.container
 			#content
 				= yield
 			#footer
-				Page generated at #{@now}
+				Page generated at #{@now} for #{@logged_in_player.name}
 	%script{:src => "/js/jquery.js"}
 	%script{:src => "/bootstrap/js/bootstrap.min.js"}
 	%script

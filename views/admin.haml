@@ -12,6 +12,7 @@
 					, 
 			%td
 				%a{:href => $base_url + '/edit_player/' + player.id.to_s + '/'} Edit
+(#{@players.count} Players Total)
 
 
 %form{ :action => $base_url + "/add_player/", :method => "post"}

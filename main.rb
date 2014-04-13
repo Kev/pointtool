@@ -17,6 +17,8 @@ class Player
 	property :id, Serial
 	property :name, String
 	has n, :characters
+	has n, :submissions
+	has n, :approvals
 
 	def getCharacters()
 		activeCharacters = []
@@ -61,6 +63,24 @@ class Character
 	has n, :events, :through => :attendances
 end
 
+class Submission
+	include DataMapper::Resource
+	property :id, Serial
+	property :time, DateTime
+
+	belongs_to :player
+	has 1, :event
+end
+
+class Approval
+	include DataMapper::Resource
+	property :id, Serial
+	property :time, DateTime
+
+	belongs_to :player
+	belongs_to :event
+end
+
 class Event
 	include DataMapper::Resource
 	property :id, Serial
@@ -69,9 +89,11 @@ class Event
 	property :corner_value, Float
 	property :event_type, String
 
-	#belongs_to :player, 'approved_by', :required => false
 	has n, :attendances
 	has n, :characters, :through => :attendances
+
+	has 1, :approval, :required => false
+	belongs_to :submission
 
 	def getCharactersString()
 		result = ""
@@ -82,12 +104,15 @@ class Event
 	end
 end
 
+DataMapper::Model.raise_on_save_failure = true
 DataMapper.finalize
 
 Event.auto_upgrade!
 Player.auto_upgrade!
 Attendance.auto_upgrade!
 Character.auto_upgrade!
+Submission.auto_upgrade!
+Approval.auto_upgrade!
 
 def getPlayersActiveIn(events)
 	players = []
@@ -99,13 +124,26 @@ def getEvents(month, year)
 	Event.all(:order => [:event_time], )
 end
 
+def nowString()
+	DateTime.now.to_s
+end
+
 def getMonthReport(monthNumber, year)
 	@month = Date::MONTHNAMES[monthNumber]
 	@events = getEvents(@month, year)
 	@players = getPlayersActiveIn(@events)
 	@corp = "Hidden Agenda"
-	@now = DateTime.now.to_s
+	@now = nowString()
+	@isk_total = 0
+	@events.each{|event| @isk_total += event.corner_value}
+	@point_total = 0
+	@players.each{|player| @point_total += player.getPointsFrom(@events)}
+	@isk_point_average = @point_total > 0 ? @isk_total / @point_total : 0
 	haml :month
+end
+
+def getCurrentPlayer()
+	Player.first_or_create(:name => "Default")
 end
 
 def checkIsAdmin()
@@ -122,11 +160,15 @@ get '/add_event/' do
 	Player.create(:name => @name)
 	@create_or_edit = "Create"
 	@submit_relative_url = "/add_event/"
+	@logged_in_player = getCurrentPlayer()
+	@now = nowString()
 	haml :edit_event
 end
 
 def createOrEditEvent(params, create)
 	description = params[:description]
+	@logged_in_player = getCurrentPlayer()
+	@now = nowString()
 	if params[:event_time] and not params[:event_time].empty?
 		begin
 			event_time = Time.parse(params[:event_time]).utc
@@ -155,7 +197,8 @@ def createOrEditEvent(params, create)
 		return haml :error
 	end
 	if create
-		@event = Event.create(:description => description, :event_time => event_time, :corner_value => corner_value, :event_type => event_type, :characters => characters)
+		submission = Submission.create(:player => @logged_in_player, :time => Time.new.utc)
+		@event = Event.create(:description => description, :event_time => event_time, :corner_value => corner_value, :event_type => event_type, :characters => characters, :submission => submission)
 		@message = "Event created"
 		@create_or_edit = "Edit"
 		@submit_relative_url = "/edit_event/" + @event.id.to_s + "/"
@@ -180,6 +223,8 @@ end
 
 get '/edit_event/:id/' do
 	@event = Event.first(:id => params[:id])
+	@logged_in_player = getCurrentPlayer()
+	@now = nowString()
 	if not @event
 		@reason = "Event " + id + " doesn't exist"
 		return haml :error
@@ -195,6 +240,8 @@ get '/edit_event/:id/' do
 end
 
 post '/edit_event/:id/' do
+	@logged_in_player = getCurrentPlayer()
+	@now = nowString()
 	if checkIsAdmin() # or not approved but you're the owner
 		return createOrEditEvent(params, false)
 	else
@@ -204,19 +251,25 @@ post '/edit_event/:id/' do
 end
 
 post '/add_player/' do
+	@logged_in_player = getCurrentPlayer()
 	@name = params[:name]
+	@now = nowString()
 	existing = Player.first(:name => @name)
 	if existing or not checkIsAdmin()
 		@reason = "You tried to add a player that already exists (name=" + @name + ")"
 		haml :error
 	else
-		Player.create(:name => @name)
+		player = Player.create(:name => @name)
+		puts player.name
+		puts player.saved?
 		haml :add_player_success
 	end
 end
 
 post '/add_character/' do
+	@logged_in_player = getCurrentPlayer()
 	@name = params[:name]
+	@now = nowString()
 	existing = Character.first(:name => @name, :active => true)
 	@player = Player.first(:id => params[:player_id])
 	if existing or not checkIsAdmin()
@@ -233,11 +286,19 @@ post '/add_character/' do
 end
 
 get '/admin/' do
+	@logged_in_player = getCurrentPlayer()
+	@now = nowString()
+	if not checkIsAdmin()
+		@reason = "Not Admin"
+		return haml :error
+	end
 	@players = Player.all(:order => [:name], )
 	haml :admin
 end
 
 get '/delete_character/:id/' do
+	@logged_in_player = getCurrentPlayer()
+	@now = nowString()
 	id = params[:id]
 	character = Character.first(:id => id)
 	if character and checkIsAdmin()
@@ -252,6 +313,8 @@ get '/delete_character/:id/' do
 end
 
 post '/edit_player/:id/' do
+	@logged_in_player = getCurrentPlayer()
+	@now = nowString()
 	id = params[:id]
 	@player = Player.first(:id => id)
 	if @player and checkIsAdmin()
@@ -265,6 +328,8 @@ post '/edit_player/:id/' do
 end
 
 get '/edit_player/:id/' do
+	@logged_in_player = getCurrentPlayer()
+	@now = nowString()
 	id = params[:id]
 	@player = Player.first(:id => id)
 	if @player and checkIsAdmin()
@@ -275,6 +340,8 @@ get '/edit_player/:id/' do
 end
 
 get '/' do
+	@logged_in_player = getCurrentPlayer()
+	@now = nowString()
 	now = DateTime.now
 	@year = now.year
 	@month = now.month
