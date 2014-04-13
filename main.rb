@@ -125,7 +125,7 @@ get '/add_event/' do
 	haml :edit_event
 end
 
-post '/add_event/' do
+def createOrEditEvent(params, create)
 	description = params[:description]
 	if params[:event_time] and not params[:event_time].empty?
 		begin
@@ -147,18 +147,35 @@ post '/add_event/' do
 	end
 	characters = []
 	invalid_characters = []
-	characters_string.split(", ").each {|x|
-		character = Character.first(:name => x, :active => true)
+	characters_string.split("\n").each {|x|
+		character = Character.first(:name => x.strip, :active => true)
 		if character then characters << character else invalid_characters << x end}
 	if not invalid_characters.empty? then
 		@reason = "Character doesn't exist (" + invalid_characters.join(", ") + ")"
 		return haml :error
 	end
-	@event = Event.create(:description => description, :event_time => event_time, :corner_value => corner_value, :event_type => event_type, :characters => characters)
-	@message = "Event created"
-	@create_or_edit = "Edit"
-	@submit_relative_url = "/edit_event/"
-	haml :edit_event
+	if create
+		@event = Event.create(:description => description, :event_time => event_time, :corner_value => corner_value, :event_type => event_type, :characters => characters)
+		@message = "Event created"
+		@create_or_edit = "Edit"
+		@submit_relative_url = "/edit_event/" + @event.id.to_s + "/"
+		haml :edit_event
+	else
+		@event = Event.first(:id => params[:id])
+		if not @event
+			@reason = "Event " + params[:id].to_s + "doesn't exist"
+			haml :error
+		end
+		@event.update(:description => description, :event_time => event_time, :corner_value => corner_value, :event_type => event_type, :characters => characters)
+		@message = "Event modified"
+		@create_or_edit = "Edit"
+		@submit_relative_url = "/edit_event/" + @event.id.to_s + "/"
+		haml :edit_event
+	end
+end
+
+post '/add_event/' do
+	createOrEditEvent(params, true)
 end
 
 get '/edit_event/:id/' do
@@ -169,8 +186,17 @@ get '/edit_event/:id/' do
 	end
 	if checkIsAdmin() # or not approved but you're the owner
 		@create_or_edit = "Edit"
-		@submit_relative_url = "/edit_event/"
+		@submit_relative_url = "/edit_event/" + @event.id.to_s + "/"
 		haml :edit_event
+	else
+		@reason = "No access"
+		return haml :error
+	end
+end
+
+post '/edit_event/:id/' do
+	if checkIsAdmin() # or not approved but you're the owner
+		return createOrEditEvent(params, false)
 	else
 		@reason = "No access"
 		return haml :error

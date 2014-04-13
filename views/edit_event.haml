@@ -15,8 +15,12 @@
 		%input{:type => "text", :name =>"corner_value", :value => @event ? @event.corner_value : ""}
 		%label When (Eve time; leave blank to set to current time):
 		%input{:type => "text", :name =>"event_time", :value => @event ? @event.event_time.to_s : ""}
-		%label Characters:
-		%input{:type => "text", :name =>"characters", :value => @event ? @event.getCharactersString : ""}
+		%label Characters (one per line, can paste from fleet window):
+		%textarea{:name =>"characters"}
+			- if @event
+				- @event.characters.each do |character|
+					=character.name + "&#x000A;"
+
 		%input{:type => "hidden", :name => "event_id", :value => @event ? @event.id : ""}
 
 		%input{:type => "submit", :value => @create_or_edit + " Event"}
