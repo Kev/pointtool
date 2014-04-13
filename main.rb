@@ -92,7 +92,7 @@ class Event
 	has n, :attendances
 	has n, :characters, :through => :attendances
 
-	has 1, :approval, :required => false
+	has 1, :approval
 	belongs_to :submission
 
 	def getCharactersString()
@@ -121,7 +121,9 @@ def getPlayersActiveIn(events)
 end
 
 def getEvents(month, year)
-	Event.all(:order => [:event_time], )
+	monthStart = DateTime.new(year, month, 1)
+	monthEnd = DateTime.new(month == 12 ? year + 1 : year, month + 1 % 12)
+	Event.all(:order => [:event_time], :event_time.gte => monthStart, :event_time.lt => monthEnd)
 end
 
 def nowString()
@@ -130,7 +132,15 @@ end
 
 def getMonthReport(monthNumber, year)
 	@month = Date::MONTHNAMES[monthNumber]
-	@events = getEvents(@month, year)
+	unfilteredEvents = getEvents(monthNumber, year)
+	@pendingEventCount = 0
+	@events = []
+	unfilteredEvents.each{|event|
+		if event.approval
+			@events << event
+		else
+			@pendingEventCount += 1
+		end}
 	@players = getPlayersActiveIn(@events)
 	@corp = "Hidden Agenda"
 	@now = nowString()
@@ -221,6 +231,8 @@ post '/add_event/' do
 	createOrEditEvent(params, true)
 end
 
+
+
 get '/edit_event/:id/' do
 	@event = Event.first(:id => params[:id])
 	@logged_in_player = getCurrentPlayer()
@@ -229,7 +241,7 @@ get '/edit_event/:id/' do
 		@reason = "Event " + id + " doesn't exist"
 		return haml :error
 	end
-	if checkIsAdmin() # or not approved but you're the owner
+	if checkIsAdmin() or (@event.submission.player == @logged_in_player and not @event.approval)
 		@create_or_edit = "Edit"
 		@submit_relative_url = "/edit_event/" + @event.id.to_s + "/"
 		haml :edit_event
@@ -242,7 +254,7 @@ end
 post '/edit_event/:id/' do
 	@logged_in_player = getCurrentPlayer()
 	@now = nowString()
-	if checkIsAdmin() # or not approved but you're the owner
+	if checkIsAdmin() or (@event.submission.player == @logged_in_player and not @event.approval)
 		return createOrEditEvent(params, false)
 	else
 		@reason = "No access"
