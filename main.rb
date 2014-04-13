@@ -179,6 +179,8 @@ end
 get '/add_event/' do
 	@create_or_edit = "Create"
 	@submit_relative_url = "/add_event/"
+	@allow_edit = true
+	@allow_approval = true
 	@logged_in_player = getCurrentPlayer()
 	@now = nowString()
 	haml :edit_event
