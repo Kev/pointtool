@@ -16,7 +16,11 @@
 			%td= event.event_type
 			%td= event.description
 			%td= event.corner_value
-			%td= event.getCharactersString()
+			%td 
+				- event.characters.each do |character|
+					%span.tooltipable{:title => character.player.name, "data-toggle" => "tooltip", "data-placement" => "top"} 
+						=character.name
+
 			%td= event.event_time.to_s
 			%td
 				%a{:href => $base_url + '/edit_event/' + event.id.to_s + "/"} Edit
