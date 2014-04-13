@@ -158,6 +158,11 @@ def getMonthReport(monthNumber, year)
 end
 
 def getCurrentPlayer()
+	character_name = env['HTTP_EVE_CHARNAME']
+	character = Character.first(:name => character_name, :active => true)
+	if character
+		return character.player
+	end
 	Player.first_or_create(:name => "Default")
 end
 
