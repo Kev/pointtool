@@ -25,7 +25,29 @@
 				- if @event
 					- @event.characters.each do |character|
 						=character.name + "&#x000A;"
+		%div
+			%label Or search for characters
+			%input{:type => "text", :name =>"search_character", :id => "search_character"}
 
 		%input{:type => "hidden", :name => "event_id", :value => @event ? @event.id : ""}
 
 		%input{:type => "submit", :value => @create_or_edit + " Event"}
+
+:javascript
+
+	function pageFunction() {
+		var charactersEngine = new Bloodhound({
+			datumTokenizer: Bloodhound.tokenizers.obj.whitespace('value'),
+			queryTokenizer: Bloodhound.tokenizers.whitespace,
+			local: $.map(#{@charactersArray}, function(character) { return { value: character }; })});
+
+		charactersEngine.initialize();
+		$('#search_character').typeahead({
+			minLength: 1,
+			highlight: true,
+		},
+		{
+			name: 'characters',
+			source: charactersEngine.ttAdapter()
+		});
+	}

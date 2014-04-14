@@ -181,7 +181,12 @@ get '/add_event/' do
 	@submit_relative_url = "/add_event/"
 	@logged_in_player = getCurrentPlayer()
 	@now = nowString()
+	@charactersArray = allCharactersJSON()
 	haml :edit_event
+end
+
+def allCharactersJSON()
+	'[' + Character.all(:active => true).map{|x| '"' + x.name + '"'}.join(", ") + ']'
 end
 
 def createOrEditEvent(params, create)
@@ -215,6 +220,7 @@ def createOrEditEvent(params, create)
 		@reason = "Character doesn't exist (" + invalid_characters.join(", ") + ")"
 		return haml :error
 	end
+	@charactersArray = allCharactersJSON()
 	if create
 		submission = Submission.create(:player => @logged_in_player, :time => Time.new.utc)
 		@event = Event.create(:description => description, :event_time => event_time, :corner_value => corner_value, :event_type => event_type, :characters => characters, :submission => submission)
