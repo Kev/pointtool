@@ -21,19 +21,24 @@
 			%input{:type => "text", :name =>"event_time", :value => @event ? @event.event_time.to_s : ""}
 		%div
 			%label Characters (one per line, can paste from fleet window):
-			%textarea{:name =>"characters"}
+			%textarea{:name =>"characters", :id => "character_list"}
 				- if @event
 					- @event.characters.each do |character|
 						=character.name + "&#x000A;"
 		%div
 			%label Or search for characters
 			%input{:type => "text", :name =>"search_character", :id => "search_character"}
+			%button{:type => "button", :class => "btn", :onclick => "addCharacterClicked()"} Add Character
 
 		%input{:type => "hidden", :name => "event_id", :value => @event ? @event.id : ""}
 
-		%input{:type => "submit", :value => @create_or_edit + " Event"}
+		%button{:type => "submit" , :class => "btn"} #{@create_or_edit + " Event"}
 
 :javascript
+
+	function addCharacterClicked() {
+		return false;
+	}
 
 	function pageFunction() {
 		var charactersEngine = new Bloodhound({
@@ -50,4 +55,5 @@
 			name: 'characters',
 			source: charactersEngine.ttAdapter()
 		});
+
 	}
