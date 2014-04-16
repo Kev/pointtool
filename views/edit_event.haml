@@ -37,6 +37,12 @@
 :javascript
 
 	function addCharacterClicked() {
+		value = $("#character_list").val();
+		if (value != "") {
+			value += "\n";
+		}
+		value += $("#search_character").val();
+		$("#character_list").val(value);
 		return false;
 	}
 
