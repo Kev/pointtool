@@ -199,7 +199,7 @@ def createOrEditEvent(params, create)
 	@now = nowString()
 	if params[:event_time] and not params[:event_time].empty?
 		begin
-			event_time = Time.parse(params[:event_time]).utc
+			event_time = Time.parse(params[:event_time] + "Z").utc
 		rescue
 			@reason = "Invalid time format: " + params[:event_time] + $!.to_s
 			return haml :error
