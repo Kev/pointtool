@@ -102,6 +102,10 @@ class Event
 			result += x.name}
 		return result
 	end
+
+	def getFormatDateTime()
+		return event_time.strftime("%Y-%m-%d %H:%M")
+	end
 end
 
 DataMapper::Model.raise_on_save_failure = true
@@ -259,6 +263,7 @@ get '/edit_event/:id/' do
 	if checkIsAdmin() or (@event.submission.player == @logged_in_player and not @event.approval)
 		@create_or_edit = "Edit"
 		@submit_relative_url = "/edit_event/" + @event.id.to_s + "/"
+		@charactersArray = allCharactersJSON()
 		haml :edit_event
 	else
 		@reason = "No access"

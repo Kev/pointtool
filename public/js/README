@@ -1,4 +1,6 @@
 jquery taken from jquery
 typeahead from http://twitter.github.com/typeahead.js/releases/latest/typeahead.bundle.min.js
+bootstrap-datetimepicker is from https://github.com/Eonasdan/bootstrap-datetimepicker/releases/tag/v3.0.0 and is MIT licensed
+moment is taken from http://momentjs.com/ and is MIT licensed
 
 See the source sites for licensing
