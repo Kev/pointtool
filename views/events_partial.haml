@@ -16,7 +16,11 @@
 			%td= event.description
 			%td= event.corner_value
 			%td 
+				- doneRow = false
 				- event.characters.each do |character|
+					- if doneRow
+						,
+					- doneRow = true
 					%span.tooltipable{:title => character.player.name, "data-toggle" => "tooltip", "data-placement" => "top"} 
 						=character.name
 
