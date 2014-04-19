@@ -20,7 +20,7 @@
 					%span.tooltipable{:title => character.player.name, "data-toggle" => "tooltip", "data-placement" => "top"} 
 						=character.name
 
-			%td= event.event_time.to_s
+			%td= event.getFormatDateTime()
 			%td= event.submission.player.name
 			-if @allow_edit
 				%td
