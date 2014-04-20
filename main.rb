@@ -159,6 +159,7 @@ def getMonthReport(monthNumber, year)
 	@now = nowString()
 	@isk_total = 0
 	@events.each{|event| @isk_total += event.corner_value}
+	@isk_total * 0.8 # to allow for stuff selling below corner value
 	@point_total = 0
 	@players.each{|player| @point_total += player.getPointsFrom(@events)}
 	@isk_point_average = @point_total > 0 ? @isk_total / @point_total : 0
