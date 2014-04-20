@@ -21,9 +21,18 @@
 			%td
 				%a{:href => $base_url + '/delete_character/' + character.id.to_s + '/'} Delete
 
+Has password set: #{@player.hasPassword() ? "Yes" : "No"}
+
 %form{ :action => $base_url + "/add_character/", :method => "post"}
 	%fieldset
 		%label Name:
 		%input{:type => "text", :name =>"name"}
 		%input{:type => "hidden", :name => "player_id", :value => @player.id.to_s}
 		%input{:type => "submit", :value => "Add Character"}
+
+%form{ :action => $base_url + "/admin_reset_password/", :method => "post"}
+	%fieldset
+		%label Set new password for #{@player.name}:
+		%input{:type => "password", :name =>"password"}
+		%input{:type => "hidden", :name => "player_id", :value => @player.id.to_s}
+		%input{:type => "submit", :value => "Set password"}

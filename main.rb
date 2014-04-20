@@ -7,6 +7,7 @@ require 'haml'
 require 'data_mapper'
 require 'date'
 require 'time'
+require 'digest/sha2'
 
 config_file "config.yml"
 
@@ -22,6 +23,7 @@ class Player
 	property :id, Serial
 	property :name, String
 	property :admin, Boolean
+	property :password_hash_sha512, String, :length => 150
 	has n, :characters
 	has n, :submissions
 	has n, :approvals
@@ -49,6 +51,10 @@ class Player
 		dates = []
 		getEventsParticipatedIn(events).each{|event| dates << event.event_time.to_date}
 		return dates.uniq.count
+	end
+
+	def hasPassword()
+		return password_hash_sha512 ? true : false
 	end
 end
 
@@ -215,6 +221,10 @@ def checkIsAdmin()
 	return false
 end
 
+def hashOf(password)
+	return Digest::SHA512.hexdigest(settings.sha_salt + password)
+end
+
 before do
 	pass if request.path_info == "/login/"
 	@logged_in_player = getCurrentPlayer()
@@ -336,8 +346,7 @@ post '/add_player/' do
 		haml :error
 	else
 		player = Player.create(:name => @name)
-		puts player.name
-		puts player.saved?
+		redirect "/edit_player/" + player.id.to_s + "/"
 		haml :add_player_success
 	end
 end
@@ -401,6 +410,22 @@ get '/delete_character/:id/' do
 		@reason = "Character doesn't exist"
 		haml :error
 	end
+end
+
+post '/admin_reset_password/' do
+	if not checkIsAdmin()
+		@reason = "Not an admin"
+		haml :error
+	end
+	@player = Player.first(:id => params[:player_id])
+	if @player
+		password_hash = hashOf(params[:password])
+		@player.update(:password_hash_sha512 => password_hash)
+		@message = "Updated password"
+		redirect "/admin/"
+	end
+	@reason = "No such player"
+	haml :error
 end
 
 post '/edit_player/:id/' do

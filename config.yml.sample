@@ -1,7 +1,9 @@
-base_url: ""
-corp_name: "Demo Corp"
-trusted_url_base: "http://localhost:4567"
-dev_mode: false
+base_url: "" # If not running at the root of your web server, set this to e.g. "/pointtool" to have all the URLs under /pointtool
+corp_name: "Demo Corp" # Used for display only
+trusted_url_base: "http://localhost:4567" # Used to tell the IGB to trust this USE as the full URL of the base of the webserver
+dev_mode: false # Do not enable this
+fake_igb_character: "" # Do not set this
+sha_salt: "set this to something" # Set this to something unique to your site
 
 # Only enable these for development work
 #dev_mode: true # Will create a "Default" user, who is an admin without needing to login
