@@ -3,9 +3,15 @@
 	#{@month} #{@year}
 
 %h3 This month:
+- if @previous_url
+	%a{:href => @previous_url} Previous Month (#{@previous_month})
+- if @next_url
+	%a{:href => @next_url} Next Month (#{@next_month})
 %div Total estimated isk: #{@isk_total}
 %div Total points earned: #{@point_total}
 %div Average isk contributed per point: #{@isk_point_average}
+
+
 
 = haml :events_partial
 %div Plus #{@pendingEventCount} pending events.

@@ -164,6 +164,26 @@ def getMonthReport(monthNumber, year)
 	@players.each{|player| @point_total += player.getPointsFrom(@events)}
 	@isk_point_average = @point_total > 0 ? @isk_total / @point_total : 0
 	@allow_edit = checkIsAdmin()
+	previousMonth = monthNumber - 1
+	previousYear = year
+	if previousMonth == 0
+		previousMonth = 12
+		previousYear -= 1
+	end
+	@previous_url = $base_url + "/month/" + previousYear.to_s + "/" + previousMonth.to_s + "/"
+	@previous_month = Date::MONTHNAMES[previousMonth] + " " + previousYear.to_s
+	nowDate = DateTime.now
+	if nowDate.month > monthNumber or nowDate.year > year
+		nextMonth = monthNumber + 1
+		nextYear = year
+		if nextMonth == 13
+			nextMonth = 1
+			nextYear += 1
+		end
+		@next_url = $base_url + "/month/" + nextYear.to_s + "/" + nextMonth.to_s + "/"
+		@next_month = Date::MONTHNAMES[nextMonth] + " " + nextYear.to_s
+	end
+	
 	haml :month
 end
 
@@ -209,8 +229,8 @@ get '/login/' do
 end
 
 get '/month/:year/:month/' do
-	@month = params[:month]
-	@year = params[:year]
+	@month = params[:month].to_i
+	@year = params[:year].to_i
 	getMonthReport(@month, @year)
 end
 
