@@ -1,0 +1,3 @@
+base_url: ""
+corp_name: "Demo Corp"
+trusted_url_base: "http://localhost:4567"

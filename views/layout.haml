@@ -22,7 +22,7 @@
 						%span.icon-bar
 						%span.icon-bar
 						%span.icon-bar
-					%a.navbar-brand{:href => $base_url + "/"} #{@corp} Point Tracker
+					%a.navbar-brand{:href => $base_url + "/"} #{$corp} Point Tracker
 					.collapse.navbar-collapse
 						%ul.nav.navbar-nav
 							%li 
@@ -51,6 +51,6 @@
 			pageFunction();
 		}
 		if (typeof CCPEVE != 'undefined') {
-			CCPEVE.requestTrust('http://localhost:4567');
+			CCPEVE.requestTrust("#{$trusted_url_base}");
 		}
 		

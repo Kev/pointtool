@@ -2,12 +2,17 @@ require 'rubygems'
 require 'bundler/setup'
 
 require 'sinatra'
+require "sinatra/config_file"
 require 'haml'
 require 'data_mapper'
 require 'date'
 require 'time'
 
-$base_url = ""
+config_file "config.yml"
+
+$base_url = settings.base_url
+$corp = settings.corp_name
+$trusted_url_base = settings.trusted_url_base
 $event_types = ["C5 Site", "C3 Site", "Gas", "PVP", "Other"]
 
 DataMapper::setup(:default, "sqlite3://#{Dir.pwd}/points.db")
@@ -150,7 +155,6 @@ def getMonthReport(monthNumber, year)
 			@pendingEventCount += 1
 		end}
 	@players = getPlayersActiveIn(@events)
-	@corp = "Hidden Agenda"
 	@now = nowString()
 	@isk_total = 0
 	@events.each{|event| @isk_total += event.corner_value}
