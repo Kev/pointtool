@@ -21,6 +21,7 @@ class Player
 	include DataMapper::Resource
 	property :id, Serial
 	property :name, String
+	property :admin, Boolean
 	has n, :characters
 	has n, :submissions
 	has n, :approvals
@@ -167,18 +168,46 @@ end
 
 def getCurrentPlayer()
 	character_name = env['HTTP_EVE_CHARNAME']
+	if not character_name or character_name == ""
+		if settings.fake_igb_character
+			character_name = settings.fake_igb_character
+		end
+	end
 	character = Character.first(:name => character_name, :active => true)
 	if character
 		return character.player
 	end
-	Player.first_or_create(:name => "Default")
+
+	if settings.dev_mode
+		return Player.first_or_create(:name => "Default", :admin => true)
+	end
+	return nil
 end
 
 def checkIsAdmin()
-	true
+	if settings.dev_mode
+		if @logged_in_player
+			return @logged_in_player.admin
+		end
+		return false
+	end
+	return false
 end
 
-get '/month/:year/:month/' do 
+before do
+	pass if request.path_info == "/login/"
+	@logged_in_player = getCurrentPlayer()
+	@now = nowString()
+	if not @logged_in_player
+		redirect "/login/"
+	end
+end
+
+get '/login/' do
+	haml :login, :layout => false
+end
+
+get '/month/:year/:month/' do
 	@month = params[:month]
 	@year = params[:year]
 	getMonthReport(@month, @year)
@@ -187,8 +216,6 @@ end
 get '/add_event/' do
 	@create_or_edit = "Create"
 	@submit_relative_url = "/add_event/"
-	@logged_in_player = getCurrentPlayer()
-	@now = nowString()
 	@charactersArray = allCharactersJSON()
 	haml :edit_event
 end
@@ -199,8 +226,6 @@ end
 
 def createOrEditEvent(params, create)
 	description = params[:description]
-	@logged_in_player = getCurrentPlayer()
-	@now = nowString()
 	if params[:event_time] and not params[:event_time].empty?
 		begin
 			event_time = Time.parse(params[:event_time] + "Z").utc
@@ -258,8 +283,6 @@ end
 
 get '/edit_event/:id/' do
 	@event = Event.first(:id => params[:id])
-	@logged_in_player = getCurrentPlayer()
-	@now = nowString()
 	if not @event
 		@reason = "Event " + id + " doesn't exist"
 		return haml :error
@@ -276,8 +299,6 @@ get '/edit_event/:id/' do
 end
 
 post '/edit_event/:id/' do
-	@logged_in_player = getCurrentPlayer()
-	@now = nowString()
 	if checkIsAdmin() or (@event.submission.player == @logged_in_player and not @event.approval)
 		return createOrEditEvent(params, false)
 	else
@@ -287,9 +308,7 @@ post '/edit_event/:id/' do
 end
 
 post '/add_player/' do
-	@logged_in_player = getCurrentPlayer()
 	@name = params[:name]
-	@now = nowString()
 	existing = Player.first(:name => @name)
 	if existing or not checkIsAdmin()
 		@reason = "You tried to add a player that already exists (name=" + @name + ")"
@@ -303,9 +322,7 @@ post '/add_player/' do
 end
 
 post '/add_character/' do
-	@logged_in_player = getCurrentPlayer()
 	@name = params[:name]
-	@now = nowString()
 	existing = Character.first(:name => @name, :active => true)
 	@player = Player.first(:id => params[:player_id])
 	if existing or not checkIsAdmin()
@@ -328,8 +345,6 @@ def renderAdminPage()
 end
 
 get '/approve_event/:id/' do
-	@logged_in_player = getCurrentPlayer()
-	@now = nowString()
 	if not checkIsAdmin()
 		@reason = "Not Admin"
 		return haml :error
@@ -344,10 +359,8 @@ end
 
 
 get '/admin/' do
-	@logged_in_player = getCurrentPlayer()
 	@allow_approval = true
 	@allow_edit = true
-	@now = nowString()
 	if not checkIsAdmin()
 		@reason = "Not Admin"
 		return haml :error
@@ -356,8 +369,6 @@ get '/admin/' do
 end
 
 get '/delete_character/:id/' do
-	@logged_in_player = getCurrentPlayer()
-	@now = nowString()
 	id = params[:id]
 	character = Character.first(:id => id)
 	if character and checkIsAdmin()
@@ -372,8 +383,6 @@ get '/delete_character/:id/' do
 end
 
 post '/edit_player/:id/' do
-	@logged_in_player = getCurrentPlayer()
-	@now = nowString()
 	id = params[:id]
 	@player = Player.first(:id => id)
 	if @player and checkIsAdmin()
@@ -387,8 +396,6 @@ post '/edit_player/:id/' do
 end
 
 get '/edit_player/:id/' do
-	@logged_in_player = getCurrentPlayer()
-	@now = nowString()
 	id = params[:id]
 	@player = Player.first(:id => id)
 	if @player and checkIsAdmin()
@@ -399,8 +406,6 @@ get '/edit_player/:id/' do
 end
 
 get '/' do
-	@logged_in_player = getCurrentPlayer()
-	@now = nowString()
 	now = DateTime.now
 	@year = now.year
 	@month = now.month
