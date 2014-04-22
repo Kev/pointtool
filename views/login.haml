@@ -8,3 +8,8 @@
 		%label Password:
 		%input{:type => "password", :name =>"password"}
 		%input{:type => "submit", :value => "Login"}
+
+:javascript
+	if (typeof CCPEVE != 'undefined') {
+		CCPEVE.requestTrust("#{$trusted_url_base}");
+	}
