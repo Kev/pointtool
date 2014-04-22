@@ -16,13 +16,15 @@ $corp = settings.corp_name
 $trusted_url_base = settings.trusted_url_base
 $event_types = ["C5 Site", "C3 Site", "Gas", "PVP", "Other"]
 
+use Rack::Session::Cookie, :expire_after => 21600, :secret => settings.cookie_secret
+
 DataMapper::setup(:default, "sqlite3://#{Dir.pwd}/points.db")
 
 class Player
 	include DataMapper::Resource
 	property :id, Serial
 	property :name, String
-	property :admin, Boolean
+	property :admin, Boolean, :default => false
 	property :password_hash_sha512, String, :length => 150
 	has n, :characters
 	has n, :submissions
@@ -194,6 +196,13 @@ def getMonthReport(monthNumber, year)
 end
 
 def getCurrentPlayer()
+	if session['player_id']
+		player = Player.first(:id => session['player_id'])
+		if player
+			return player
+		end
+	end
+
 	character_name = env['HTTP_EVE_CHARNAME']
 	if not character_name or character_name == ""
 		if settings.fake_igb_character
@@ -218,6 +227,13 @@ def checkIsAdmin()
 		end
 		return false
 	end
+	# Do not allow admin by players who haven't authenticated, even if they're admins
+	if session['player_id']
+		player = Player.first(:id => session['player_id'])
+		if player
+			return player.admin
+		end
+	end
 	return false
 end
 
@@ -225,10 +241,15 @@ def hashOf(password)
 	return Digest::SHA512.hexdigest(settings.sha_salt + password)
 end
 
+def setLoggedInSession(player)
+	session['player_id'] = player.id.to_s
+end
+
 before do
 	pass if request.path_info == "/login/"
 	@logged_in_player = getCurrentPlayer()
 	@now = nowString()
+	@isAdmin = checkIsAdmin()
 	if not @logged_in_player
 		redirect "/login/"
 	end
@@ -236,6 +257,36 @@ end
 
 get '/login/' do
 	haml :login, :layout => false
+end
+
+post '/login/' do
+	name = params[:name]
+	password = params[:password]
+	player = Player.first(:name => name)
+	fail = true # Default to fail in case I make a mistake and allow a code path that doesn't catch a failure
+	password_hash = hashOf(password)
+	if player
+		if password_hash == player.password_hash_sha512
+			fail = false
+			setLoggedInSession(player)
+		else
+			fail = true
+		end
+	else
+		if Player.count == 0
+			# We'll create an admin with the first char that logs in
+			fail = false
+			player = Player.create(:name => name, :admin => true, :password_hash_sha512 => password_hash)
+			setLoggedInSession(player)
+		else
+			fail = true
+		end
+	end
+	if fail
+		@message = "Login failed"
+		return haml :login, :layout => false
+	end
+	redirect "/"
 end
 
 get '/month/:year/:month/' do

@@ -33,7 +33,10 @@
 							%li
 								%a{:href => $base_url + "/my/"} My Page
 							%li
-								%a{:href => $base_url + "/admin/"} Admin
+								%a{:href => $base_url + "/login/"} Login
+							- if @isAdmin
+								%li
+									%a{:href => $base_url + "/admin/"} Admin
 					/ /.nav-collapse
 		.container
 			#content

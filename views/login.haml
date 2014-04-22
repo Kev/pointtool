@@ -1,0 +1,10 @@
+- if @message
+	%h2
+		#{@message}
+%form{ :action => $base_url + "/login/", :method => "post"}
+	%fieldset
+		%label Name:
+		%input{:type => "text", :name =>"name"}
+		%label Password:
+		%input{:type => "password", :name =>"password"}
+		%input{:type => "submit", :value => "Login"}
