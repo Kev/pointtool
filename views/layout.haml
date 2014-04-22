@@ -32,8 +32,13 @@
 								%a{:href => $base_url + "/add_event/"} Add Event
 							%li
 								%a{:href => $base_url + "/my/"} My Page
-							%li
-								%a{:href => $base_url + "/login/"} Login
+							- if @isAuthenticated
+								%li
+									%a{:href => $base_url + "/logout/"} Logout
+							- else
+								%li
+									%a{:href => $base_url + "/login/"} Login
+
 							- if @isAdmin
 								%li
 									%a{:href => $base_url + "/admin/"} Admin

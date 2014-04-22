@@ -242,7 +242,11 @@ def hashOf(password)
 end
 
 def setLoggedInSession(player)
-	session['player_id'] = player.id.to_s
+	if player
+		session['player_id'] = player.id.to_s
+	else
+		session['player_id'] = ""
+	end
 end
 
 before do
@@ -250,9 +254,17 @@ before do
 	@logged_in_player = getCurrentPlayer()
 	@now = nowString()
 	@isAdmin = checkIsAdmin()
+	if session['player_id'] and session['player_id'] != ""
+		@isAuthenticated = true
+	end
 	if not @logged_in_player
 		redirect "/login/"
 	end
+end
+
+get '/logout/' do
+	setLoggedInSession(nil)
+	redirect "/"
 end
 
 get '/login/' do

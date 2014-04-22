@@ -9,6 +9,10 @@
 		%input{:type => "password", :name =>"password"}
 		%input{:type => "submit", :value => "Login"}
 
+%h3
+	If you're viewing this from the in-game browser for the first time, choose to trust this site when prompted, and then go to
+	%a{:href => $base_url + '/'} Home
+
 :javascript
 	if (typeof CCPEVE != 'undefined') {
 		CCPEVE.requestTrust("#{$trusted_url_base}");
