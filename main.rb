@@ -144,7 +144,7 @@ end
 
 def getEvents(month, year)
 	monthStart = DateTime.new(year, month, 1)
-	monthEnd = DateTime.new(month == 12 ? year + 1 : year, month + 1 % 12)
+	monthEnd = DateTime.new(month == 12 ? year + 1 : year, (month % 12) + 1)
 	Event.all(:order => [:event_time], :event_time.gte => monthStart, :event_time.lt => monthEnd)
 end
 
