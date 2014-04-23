@@ -495,8 +495,12 @@ post '/edit_player/:id/' do
 	id = params[:id]
 	@player = Player.first(:id => id)
 	if @player and checkIsAdmin()
-		@player.update(:name => params[:name])
-		@message = "Name updated"
+		admin = false
+		if params[:admin]
+			admin = true
+		end
+		@player.update(:name => params[:name], :admin => admin)
+		@message = "Player updated"
 		haml :edit_player
 	else
 		@reason = "You tried to edit a player that doesn't exist (id=" + id + ")"

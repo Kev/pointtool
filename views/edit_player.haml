@@ -5,9 +5,14 @@
 
 %form{ :action => $base_url + "/edit_player/" + @player.id.to_s + "/", :method => "post"}
 	%fieldset
-		%label Name:
-		%input{:type => "text", :name =>"name", :value => @player.name}
-		%input{:type => "submit", :value => "Change Name"}
+		%div
+			%label Name:
+			%input{:type => "text", :name =>"name", :value => @player.name}
+		%div
+			%label Is Administrator
+			%input{:type => "checkbox", :name =>"admin", :value => "admin", :checked => @player.admin}
+		%div
+			%input{:type => "submit", :value => "Save"}
 
 %h3 Characters
 
