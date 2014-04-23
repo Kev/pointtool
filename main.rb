@@ -172,6 +172,7 @@ def getMonthReport(monthNumber, year)
 	@players.each{|player| @point_total += player.getPointsFrom(@events)}
 	@isk_point_average = @point_total > 0 ? @isk_total / @point_total : 0
 	@allow_edit = checkIsAdmin()
+	@show_approver = checkIsAdmin()
 	previousMonth = monthNumber - 1
 	previousYear = year
 	if previousMonth == 0
