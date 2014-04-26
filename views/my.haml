@@ -1,0 +1,16 @@
+%h2
+	#{@player.name} - #{@month} #{@year}
+
+%h3 This month:
+- if @previous_url
+	%a{:href => @previous_url} Previous Month (#{@previous_month})
+- if @next_url
+	%a{:href => @next_url} Next Month (#{@next_month})
+%h4 Approved Events (#{@approved_events.count})
+- @events = @approved_events
+= haml :events_partial
+%h4 Pending Events (#{@pending_events.count})
+- @events = @pending_events
+= haml :events_partial
+
+Giving #{@points} points.

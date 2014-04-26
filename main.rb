@@ -152,19 +152,44 @@ def nowString()
 	DateTime.now.to_s
 end
 
+def getFilteredEvents(month, year, filter)
+	events = getEvents(month, year)
+	return filter ? events.map{|event| filter.call(event)}.compact : events
+end
+
+def getNextLink(monthNumber, year, prefix)
+	nowDate = DateTime.now
+	nextMonth = monthNumber + 1
+	nextYear = year
+	if nextMonth == 13
+		nextMonth = 1
+		nextYear += 1
+	end
+	url = $base_url + prefix + nextYear.to_s + "/" + nextMonth.to_s + "/"
+	month = Date::MONTHNAMES[nextMonth] + " " + nextYear.to_s
+	return Hash[:url => url, :month => month] if nowDate.month > monthNumber or nowDate.year > year
+end
+
+def getPreviousLink(monthNumber, year, prefix)
+	previousMonth = monthNumber - 1
+	previousYear = year
+	if previousMonth == 0
+		previousMonth = 12
+		previousYear -= 1
+	end
+	url = $base_url + prefix + previousYear.to_s + "/" + previousMonth.to_s + "/"
+	month = Date::MONTHNAMES[previousMonth] + " " + previousYear.to_s
+	return Hash[:url => url, :month => month]
+end
+
 def getMonthReport(monthNumber, year)
 	@month = Date::MONTHNAMES[monthNumber]
-	unfilteredEvents = getEvents(monthNumber, year)
 	@pendingEventCount = 0
-	@events = []
-	unfilteredEvents.each{|event|
-		if event.approval
-			@events << event
-		else
-			@pendingEventCount += 1
-		end}
+	@events = getFilteredEvents(monthNumber, year, lambda{|event| 
+		@pendingEventCount += 1 if not event.approval
+		return event if event.approval
+		})
 	@players = getPlayersActiveIn(@events)
-	@now = nowString()
 	@isk_total = 0
 	@events.each{|event| @isk_total += event.corner_value}
 	@isk_total *= 0.8 # to allow for stuff selling below corner value
@@ -173,26 +198,8 @@ def getMonthReport(monthNumber, year)
 	@isk_point_average = @point_total > 0 ? @isk_total / @point_total : 0
 	@allow_edit = checkIsAdmin()
 	@show_approver = checkIsAdmin()
-	previousMonth = monthNumber - 1
-	previousYear = year
-	if previousMonth == 0
-		previousMonth = 12
-		previousYear -= 1
-	end
-	@previous_url = $base_url + "/month/" + previousYear.to_s + "/" + previousMonth.to_s + "/"
-	@previous_month = Date::MONTHNAMES[previousMonth] + " " + previousYear.to_s
-	nowDate = DateTime.now
-	if nowDate.month > monthNumber or nowDate.year > year
-		nextMonth = monthNumber + 1
-		nextYear = year
-		if nextMonth == 13
-			nextMonth = 1
-			nextYear += 1
-		end
-		@next_url = $base_url + "/month/" + nextYear.to_s + "/" + nextMonth.to_s + "/"
-		@next_month = Date::MONTHNAMES[nextMonth] + " " + nextYear.to_s
-	end
-	
+	@previous_link = getPreviousLink(monthNumber, year, "/month/")
+	@next_link = getNextLink(monthNumber, year, "/month/")
 	haml :month
 end
 
@@ -300,6 +307,37 @@ post '/login/' do
 		return haml :login, :layout => false
 	end
 	redirect "/"
+end
+
+get '/my/:year/:month/' do
+	monthNumber = params[:month].to_i
+	@year = params[:year].to_i
+	@player = getCurrentPlayer()
+	@month = Date::MONTHNAMES[monthNumber]
+	@approved_events = []
+	@pending_events = []
+	@all_events = getFilteredEvents(monthNumber, @year, lambda{|event|
+		participated = false
+		event.characters.each{|character| participated = true if character.player == @player}
+		if participated
+			if event.approval
+				@approved_events << event
+			else
+				@pending_events << event
+			end
+		end
+		event if participated})
+	@points = @player.getPointsFrom(@approved_events)
+	# @approved_events = approved_events
+	# @pending_events = pending_events
+	@previous_link = getPreviousLink(monthNumber, @year, "/my/")
+	@next_link = getNextLink(monthNumber, @year, "/my/")
+	haml :my
+end
+
+get '/my/' do
+	now = DateTime.now
+	redirect '/my/' + now.year.to_s + '/' + now.month.to_s + '/'
 end
 
 get '/month/:year/:month/' do
@@ -521,9 +559,7 @@ end
 
 get '/' do
 	now = DateTime.now
-	@year = now.year
-	@month = now.month
-	getMonthReport(@month, @year)
+	redirect '/month/' + now.year.to_s + '/' + now.month.to_s + '/'
 end
 
 

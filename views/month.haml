@@ -3,10 +3,10 @@
 	#{@month} #{@year}
 
 %h3 This month:
-- if @previous_url
-	%a{:href => @previous_url} Previous Month (#{@previous_month})
-- if @next_url
-	%a{:href => @next_url} Next Month (#{@next_month})
+- if @previous_link
+	%a{:href => @previous_link[:url]} Previous Month (#{@previous_link[:month]})
+- if @next_link
+	%a{:href => @next_link[:url]} Next Month (#{@next_link[:month]})
 %div Total estimated isk: #{@isk_total}
 %div Total points earned: #{@point_total}
 %div Average isk contributed per point: #{@isk_point_average}
