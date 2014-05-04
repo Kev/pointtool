@@ -51,7 +51,10 @@ class Player
 
 	def getPointsFrom(events)
 		dates = []
-		getEventsParticipatedIn(events).each{|event| dates << event.event_time.to_date}
+		getEventsParticipatedIn(events).each{|event|
+			postDowntimeDate = event.event_time.to_date
+			postDowntimeDate -= 1 if event.event_time.hour < 11
+			dates << postDowntimeDate}
 		return dates.uniq.count
 	end
 
