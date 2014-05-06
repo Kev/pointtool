@@ -8,8 +8,7 @@
 		%th Submitted By
 		-if @show_approver
 			%th Approved by
-		-if @allow_edit
-			%th
+		%th
 		-if @allow_approval
 			%th
 		-if @allow_delete
@@ -32,8 +31,8 @@
 			%td= event.submission.player.name
 			-if @show_approver
 				%td= event.approval ? event.approval.player.name : "N/A"
-			-if @allow_edit
-				%td
+			%td
+				-if @player and event.allow_edit(@player)
 					%a{:href => $base_url + '/edit_event/' + event.id.to_s + "/"} Edit
 			-if @allow_approval
 				%td

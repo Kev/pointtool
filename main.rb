@@ -123,6 +123,12 @@ class Event
 	def getFormatDateTime()
 		return event_time.strftime("%Y-%m-%d %H:%M")
 	end
+
+	def allow_edit(player)
+		return true if player.admin
+		return false if self.approval
+		return self.submission.player == player
+	end
 end
 
 DataMapper::Model.raise_on_save_failure = true
@@ -201,10 +207,10 @@ def getMonthReport(monthNumber, year)
 	@point_total = 0
 	@players.each{|player| @point_total += player.getPointsFrom(@events)}
 	@isk_point_average = (@point_total > 0 ? @isk_total / @point_total : 0).floor
-	@allow_edit = checkIsAdmin()
 	@show_approver = checkIsAdmin()
 	@previous_link = getPreviousLink(monthNumber, year, "/month/")
 	@next_link = getNextLink(monthNumber, year, "/month/")
+	@player = getCurrentPlayer()
 	haml :month
 end
 
@@ -333,10 +339,9 @@ get '/my/:year/:month/' do
 		end
 		event if participated})
 	@points = @player.getPointsFrom(@approved_events)
-	# @approved_events = approved_events
-	# @pending_events = pending_events
 	@previous_link = getPreviousLink(monthNumber, @year, "/my/")
 	@next_link = getNextLink(monthNumber, @year, "/my/")
+	@player = getCurrentPlayer()
 	haml :my
 end
 
@@ -450,7 +455,8 @@ get '/edit_event/:id/' do
 end
 
 post '/edit_event/:id/' do
-	if checkIsAdmin() or (@event.submission.player == @logged_in_player and not @event.approval)
+	event = Event.first(:id => params[:id])
+	if checkIsAdmin() or event.allow_edit(@logged_in_player)
 		return createOrEditEvent(params, false)
 	else
 		@reason = "No access"
