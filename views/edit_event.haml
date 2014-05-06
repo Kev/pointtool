@@ -24,7 +24,7 @@
 					%span{:class=>"glyphicon glyphicon-calendar"}
 		%div
 			%label Characters (one per line, can paste from fleet window):
-			%textarea{:name =>"characters", :id => "character_list"}
+			%textarea{:name =>"characters", :id => "character_list", :rows => "12", :cols => "50"}
 				- if @event
 					- @event.characters.each do |character|
 						=character.name + "&#x000A;"
