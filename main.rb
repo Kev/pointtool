@@ -124,8 +124,8 @@ class Event
 		return event_time.strftime("%Y-%m-%d %H:%M")
 	end
 
-	def allow_edit(player)
-		return true if player.admin
+	def allow_edit(player, is_admin)
+		return true if is_admin
 		return false if self.approval
 		return self.submission.player == player
 	end
@@ -210,7 +210,6 @@ def getMonthReport(monthNumber, year)
 	@show_approver = checkIsAdmin()
 	@previous_link = getPreviousLink(monthNumber, year, "/month/")
 	@next_link = getNextLink(monthNumber, year, "/month/")
-	@player = getCurrentPlayer()
 	haml :month
 end
 
@@ -323,7 +322,6 @@ end
 get '/my/:year/:month/' do
 	monthNumber = params[:month].to_i
 	@year = params[:year].to_i
-	@player = getCurrentPlayer()
 	@month = Date::MONTHNAMES[monthNumber]
 	@approved_events = []
 	@pending_events = []
@@ -338,10 +336,9 @@ get '/my/:year/:month/' do
 			end
 		end
 		event if participated})
-	@points = @player.getPointsFrom(@approved_events)
+	@points = @logged_in_player.getPointsFrom(@approved_events)
 	@previous_link = getPreviousLink(monthNumber, @year, "/my/")
 	@next_link = getNextLink(monthNumber, @year, "/my/")
-	@player = getCurrentPlayer()
 	haml :my
 end
 

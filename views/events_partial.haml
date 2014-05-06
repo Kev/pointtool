@@ -32,7 +32,7 @@
 			-if @show_approver
 				%td= event.approval ? event.approval.player.name : "N/A"
 			%td
-				-if @player and event.allow_edit(@player)
+				-if @logged_in_player and event.allow_edit(@logged_in_player, @isAdmin)
 					%a{:href => $base_url + '/edit_event/' + event.id.to_s + "/"} Edit
 			-if @allow_approval
 				%td
