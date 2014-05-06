@@ -196,9 +196,10 @@ def getMonthReport(monthNumber, year)
 	@isk_total = 0
 	@events.each{|event| @isk_total += event.corner_value}
 	@isk_total *= 0.8 # to allow for stuff selling below corner value
+	@isk_total = @isk_total.floor
 	@point_total = 0
 	@players.each{|player| @point_total += player.getPointsFrom(@events)}
-	@isk_point_average = @point_total > 0 ? @isk_total / @point_total : 0
+	@isk_point_average = (@point_total > 0 ? @isk_total / @point_total : 0).floor
 	@allow_edit = checkIsAdmin()
 	@show_approver = checkIsAdmin()
 	@previous_link = getPreviousLink(monthNumber, year, "/month/")
