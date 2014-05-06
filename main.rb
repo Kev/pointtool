@@ -327,7 +327,7 @@ get '/my/:year/:month/' do
 	@pending_events = []
 	@all_events = getFilteredEvents(monthNumber, @year, lambda{|event|
 		participated = false
-		event.characters.each{|character| participated = true if character.player == @player}
+		event.characters.each{|character| participated = true if character.player == @logged_in_player}
 		if participated
 			if event.approval
 				@approved_events << event
