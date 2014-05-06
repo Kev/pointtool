@@ -12,6 +12,8 @@
 			%th
 		-if @allow_approval
 			%th
+		-if @allow_delete
+			%th
 	- @events.each do |event|
 		%tr
 			%td= event.event_type
@@ -36,3 +38,6 @@
 			-if @allow_approval
 				%td
 					%a{:href => $base_url + '/approve_event/' + event.id.to_s + "/"} Approve
+			-if @allow_delete
+				%td
+					%a{:href => $base_url + '/delete_event/' + event.id.to_s + "/"} Delete

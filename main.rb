@@ -415,7 +415,20 @@ post '/add_event/' do
 	createOrEditEvent(params, true)
 end
 
-
+get '/delete_event/:id/' do
+	event = Event.first(:id => params[:id])
+	if not checkIsAdmin()
+		@reason = "No access"
+		return haml :error
+	end
+	if not event
+		@reason = "Event " + id + " doesn't exist"
+		return haml :error
+	end
+	event.attendances.destroy
+	event.destroy
+	redirect '/admin/'
+end
 
 get '/edit_event/:id/' do
 	@event = Event.first(:id => params[:id])
@@ -496,6 +509,7 @@ end
 get '/admin/' do
 	@allow_approval = true
 	@allow_edit = true
+	@allow_delete = true
 	if not checkIsAdmin()
 		@reason = "Not Admin"
 		return haml :error
