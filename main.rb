@@ -138,6 +138,7 @@ Approval.auto_upgrade!
 def getPlayersActiveIn(events)
 	players = []
 	events.each{|event| event.characters.each{|character| players << character.player if not players.include?(character.player)}}
+	players.sort!{|left,right| left.name <=> right.name}
 	return players
 end
 
