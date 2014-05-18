@@ -27,9 +27,11 @@
 		%th Player
 		%th Events
 		%th Points
+		%th %
 	- @players.each do |player|
 		%tr
 			%td= player.name
 			%td= player.getEventsFrom(@events)
 			%td= player.getPointsFrom(@events)
+			%td= player.getPointsFrom(@events) * 100 / @max_points
 
