@@ -31,10 +31,10 @@ class Player
   has n, :submissions
   has n, :approvals
 
-  def characters
-    active_characters = []
-    characters.each { |x| active_characters << x if x.active }
-    active_characters
+  def active_characters
+    result = []
+    characters.each { |x| result << x if x.active }
+    result
   end
 
   def events_participated_in(events)
@@ -292,7 +292,9 @@ end
 
 before do
   if Configuration.count == 0
-    @configuration = Configuration.create(minimum_point_value: 80)
+    @config = Configuration.create(minimum_point_value: 80)
+  else
+    @config = Configuration.first
   end
   pass if request.path_info == '/login/'
   @logged_in_player = getCurrentPlayer

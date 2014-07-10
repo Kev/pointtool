@@ -20,7 +20,7 @@
 	%tr
 		%th Name
 		%th
-	- @player.characters.each do |character|
+	- @player.active_characters.each do |character|
 		%tr
 			%td= character.name
 			%td

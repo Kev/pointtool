@@ -11,7 +11,7 @@
 		%tr
 			%td= player.name
 			%td
-				- player.characters.each do |character|
+				- player.active_characters.each do |character|
 					=character.name
 					,
 			%td
