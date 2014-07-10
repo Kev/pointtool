@@ -53,14 +53,21 @@ class Player
     events_participated_in(events).count
   end
 
-  def points_from(events)
-    dates = []
+  def points_from(events, minimum_value)
+    dates = {}
     events_participated_in(events).each do |event|
       post_downtime_date = event.event_time.to_date
       post_downtime_date -= 1 if event.event_time.hour < 11
-      dates << post_downtime_date
+      dates[post_downtime_date] = [] unless dates[post_downtime_date]
+      dates[post_downtime_date] += [event]
     end
-    dates.uniq.count
+    points = 0
+    dates.each do |date, date_events|
+      isk = 0
+      date_events.each { |x| isk += x.isk_share(self) }
+      points += 1 if isk >= minimum_value
+    end
+    points
   end
 
   def password?
@@ -138,6 +145,13 @@ class Event
     return true if is_admin
     return false if approval
     submission.player == player
+  end
+
+  def isk_share(player)
+    players = []
+    attendances.each { |x| players << x.character.player }
+    # puts "count " + description + " " + players.uniq.count.to_s
+    corner_value / players.uniq.count
   end
 end
 
@@ -225,7 +239,7 @@ def getMonthReport(monthNumber, year)
   @point_total = 0
   @max_points = 0
   @players.each do|player|
-    player_points = player.points_from(@events)
+    player_points = player.points_from(@events, @config.minimum_point_value)
     @point_total += player_points
     @max_points = [@max_points, player_points].max
   end
@@ -364,7 +378,7 @@ get '/my/:year/:month/' do
       end
     end
     event if participated})
-  @points = @logged_in_player.points_from(@approved_events)
+  @points = @logged_in_player.points_from(@approved_events, @config.minimum_point_value)
   @previous_link = getPreviousLink(monthNumber, @year, '/my/')
   @next_link = getNextLink(monthNumber, @year, '/my/')
   haml :my

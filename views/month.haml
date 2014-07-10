@@ -32,5 +32,5 @@
 		%tr
 			%td= player.name
 			%td= player.event_count_from(@events)
-			%td= player.points_from(@events)
-			%td= player.points_from(@events) * 100 / @max_points
+			%td= player.points_from(@events, @config.minimum_point_value)
+			%td= player.points_from(@events, @config.minimum_point_value) * 100 / (@max_points != 0 ? @max_points : 1)
