@@ -24,3 +24,9 @@
 		%label Name:
 		%input{:type => "text", :name =>"name"}
 		%input{:type => "submit", :value => "Add Player"}
+
+%form{ :action => $base_url + "/set_minimum_point_value/", :method => "post"}
+	%fieldset
+		%label Minimum Point Value:
+		%input{:type => "text", :name =>"value", :value => @config.minimum_point_value}
+		%input{:type => "submit", :value => "Save"}

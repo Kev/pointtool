@@ -20,6 +20,7 @@ use Rack::Session::Cookie, expire_after: 21_600, secret: settings.cookie_secret
 
 DataMapper.setup(:default, "sqlite3://#{Dir.pwd}/points.db")
 
+# Human player, owns many characters
 class Player
   include DataMapper::Resource
   property :id, Serial
@@ -67,6 +68,7 @@ class Player
   end
 end
 
+# Join class showing which characters took part in an event
 class Attendance
   include DataMapper::Resource
   property :id, Serial
@@ -74,6 +76,7 @@ class Attendance
   belongs_to :event
 end
 
+# In-game character
 class Character
   include DataMapper::Resource
   property :id, Serial
@@ -84,6 +87,7 @@ class Character
   has n, :events, through: :attendances
 end
 
+# Join class between players and events they submitted to the tool
 class Submission
   include DataMapper::Resource
   property :id, Serial
@@ -93,6 +97,7 @@ class Submission
   has 1, :event
 end
 
+# Join class to show who approved an event
 class Approval
   include DataMapper::Resource
   property :id, Serial
@@ -102,6 +107,7 @@ class Approval
   belongs_to :event
 end
 
+# A single 'thing' that happened (C3 site, gassing, PvP looting...)
 class Event
   include DataMapper::Resource
   property :id, Serial
@@ -135,6 +141,13 @@ class Event
   end
 end
 
+# Global configuration settings
+class Configuration
+  include DataMapper::Resource
+  property :id, Serial
+  property :minimum_point_value, Float
+end
+
 DataMapper::Model.raise_on_save_failure = true
 DataMapper.finalize
 
@@ -144,6 +157,7 @@ Attendance.auto_upgrade!
 Character.auto_upgrade!
 Submission.auto_upgrade!
 Approval.auto_upgrade!
+Configuration.auto_upgrade!
 
 def getPlayersActiveIn(events)
   players = []
@@ -277,6 +291,9 @@ def setLoggedInSession(player)
 end
 
 before do
+  if Configuration.count == 0
+    @configuration = Configuration.create(minimum_point_value: 80)
+  end
   pass if request.path_info == '/login/'
   @logged_in_player = getCurrentPlayer
   @now = nowString
