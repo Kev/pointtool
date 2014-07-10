@@ -62,9 +62,11 @@ class Player
       dates[post_downtime_date] += [event]
     end
     points = 0
-    dates.each do |date, date_events|
+    dates.each do |_date, date_events|
+      # puts "Looking at " + date.to_s + " for " + name
       isk = 0
-      date_events.each { |x| isk += x.isk_share(self) }
+      date_events.each { |x| isk += x.isk_per_player }
+      # puts "Found " + isk.to_s + " isk"
       points += 1 if isk >= minimum_value
     end
     points
@@ -147,7 +149,7 @@ class Event
     submission.player == player
   end
 
-  def isk_share(player)
+  def isk_per_player
     players = []
     attendances.each { |x| players << x.character.player }
     # puts "count " + description + " " + players.uniq.count.to_s
