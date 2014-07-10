@@ -538,6 +538,16 @@ get '/approve_event/:id/' do
   renderAdminPage
 end
 
+post '/set_minimum_point_value/' do
+  config = Configuration.first
+  unless checkIsAdmin
+    @reason = 'No access'
+    return haml :error
+  end
+  config.update(minimum_point_value: params[:value].to_f)
+  redirect '/admin/'
+end
+
 get '/admin/' do
   @allow_approval = true
   @allow_edit = true
