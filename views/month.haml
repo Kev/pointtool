@@ -18,7 +18,7 @@
 %div
 	%a{:href => $base_url + '/add_event/'} [Add Event]
 
-%h3 
+%h3
 	Point tallies (
 	=@players.count
 	players )
@@ -31,7 +31,6 @@
 	- @players.each do |player|
 		%tr
 			%td= player.name
-			%td= player.getEventsFrom(@events)
-			%td= player.getPointsFrom(@events)
-			%td= player.getPointsFrom(@events) * 100 / @max_points
-
+			%td= player.event_count_from(@events)
+			%td= player.points_from(@events)
+			%td= player.points_from(@events) * 100 / @max_points

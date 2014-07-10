@@ -20,13 +20,13 @@
 	%tr
 		%th Name
 		%th
-	- @player.getCharacters.each do |character|
+	- @player.characters.each do |character|
 		%tr
 			%td= character.name
 			%td
 				%a{:href => $base_url + '/delete_character/' + character.id.to_s + '/'} Delete
 
-Has password set: #{@player.hasPassword() ? "Yes" : "No"}
+Has password set: #{@player.password? ? "Yes" : "No"}
 
 %form{ :action => $base_url + "/add_character/", :method => "post"}
 	%fieldset

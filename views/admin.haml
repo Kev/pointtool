@@ -11,9 +11,9 @@
 		%tr
 			%td= player.name
 			%td
-				- player.getCharacters.each do |character|
+				- player.characters.each do |character|
 					=character.name
-					, 
+					,
 			%td
 				%a{:href => $base_url + '/edit_player/' + player.id.to_s + '/'} Edit
 (#{@players.count} Players Total)
@@ -24,4 +24,3 @@
 		%label Name:
 		%input{:type => "text", :name =>"name"}
 		%input{:type => "submit", :value => "Add Player"}
-
