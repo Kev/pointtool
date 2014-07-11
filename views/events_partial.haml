@@ -3,6 +3,7 @@
 		%th Type
 		%th Description
 		%th Corner Value
+		%th Each
 		%th Characters
 		%th When
 		%th Submitted By
@@ -18,13 +19,14 @@
 			%td= event.event_type
 			%td= event.description
 			%td= event.corner_value
-			%td 
+			%td= event.isk_per_player.round(2)
+			%td
 				- doneRow = false
 				- event.characters.each do |character|
 					- if doneRow
 						,
 					- doneRow = true
-					%span.tooltipable{:title => character.player.name, "data-toggle" => "tooltip", "data-placement" => "top"} 
+					%span.tooltipable{:title => character.player.name, "data-toggle" => "tooltip", "data-placement" => "top"}
 						=character.name
 
 			%td= event.getFormatDateTime()
