@@ -14,7 +14,8 @@ config_file 'config.yml'
 $base_url = settings.base_url
 $corp = settings.corp_name
 $trusted_url_base = settings.trusted_url_base
-$event_types = ['C5 Site', 'C3 Site', 'Gas', 'PVP', 'Other']
+$event_short_names = {C5: 'C5 Site', C3: 'C3 Site', G: 'Gas', P: 'PVP', O: 'Other'}
+$event_types = $event_short_names.values
 
 use Rack::Session::Cookie, expire_after: 21_600, secret: settings.cookie_secret
 
@@ -174,6 +175,10 @@ Character.auto_upgrade!
 Submission.auto_upgrade!
 Approval.auto_upgrade!
 Configuration.auto_upgrade!
+
+def events_of_type(events, type)
+  events.select { |event| event.event_type == type }
+end
 
 def getPlayersActiveIn(events)
   players = []

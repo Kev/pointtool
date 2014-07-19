@@ -26,11 +26,15 @@
 	%tr
 		%th Player
 		%th Events
+		- $event_short_names.each do |k, _v|
+			%th= k
 		%th Points
 		%th %
 	- @players.each do |player|
 		%tr
 			%td= player.name
 			%td= player.event_count_from(@events)
+			- $event_short_names.each do |_k, v|
+				%td= player.event_count_from(events_of_type(@events, v)) if player.event_count_from(events_of_type(@events, v)) > 0
 			%td= player.points_from(@events, @config.minimum_point_value)
 			%td= player.points_from(@events, @config.minimum_point_value) * 100 / (@max_points != 0 ? @max_points : 1)
