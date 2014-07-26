@@ -140,6 +140,10 @@ class Event
     result
   end
 
+  def players
+    players_active_in([self])
+  end
+
   def getFormatDateTime
     event_time.strftime('%Y-%m-%d %H:%M')
   end
@@ -180,7 +184,7 @@ def events_of_type(events, type)
   events.select { |event| event.event_type == type }
 end
 
-def getPlayersActiveIn(events)
+def players_active_in(events)
   players = []
   events.each { |event| event.characters.each { |character| players << character.player unless players.include?(character.player) } }
   players.sort! { |left, right| left.name <=> right.name }
@@ -238,7 +242,7 @@ def getMonthReport(monthNumber, year)
       @pendingEventCount += 1 unless event.approval
       return event if event.approval
     end)
-  @players = getPlayersActiveIn(@events)
+  @players = players_active_in(@events)
   @isk_total = 0
   @events.each { |event| @isk_total += event.corner_value }
   @isk_total *= 0.8 # to allow for stuff selling below corner value

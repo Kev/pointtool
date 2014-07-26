@@ -1,10 +1,12 @@
+%a{onclick: '$(".togglable_players").toggle();', href: '#'} Toggle characters
 %table
 	%tr
 		%th Type
 		%th Description
 		%th Corner Value
 		%th Each
-		%th Characters
+		%th.togglable_players{style: "display: none;"} Players
+		%th.togglable_players Characters
 		%th When
 		%th Submitted By
 		-if @show_approver
@@ -20,7 +22,14 @@
 			%td= event.description
 			%td= event.corner_value
 			%td= event.isk_per_player.round(2)
-			%td
+			%td.togglable_players{style: "display: none;"}
+				- doneRow = false
+				- event.players.each do |player|
+					- if doneRow
+						,
+					- doneRow = true
+					=player.name
+			%td.togglable_players
 				- doneRow = false
 				- event.characters.each do |character|
 					- if doneRow
