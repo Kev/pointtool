@@ -14,7 +14,9 @@ config_file 'config.yml'
 $base_url = settings.base_url
 $corp = settings.corp_name
 $trusted_url_base = settings.trusted_url_base
-$event_short_names = {C5: 'C5 Site', C3: 'C3 Site', G: 'Gas', P: 'PVP', O: 'Other'}
+$pointable_types = {C5: 'C5 Site', C3: 'C3 Site', G: 'Gas', P: 'PVP', O: 'Other'}
+$unpointable_types = {Ore: 'Ore Site'}
+$event_short_names = $pointable_types.merge($unpointable_types)
 $event_types = $event_short_names.values
 
 use Rack::Session::Cookie, expire_after: 21_600, secret: settings.cookie_secret
@@ -57,6 +59,10 @@ class Player
   def points_from(events, minimum_value)
     dates = {}
     events_participated_in(events).each do |event|
+      unless $pointable_types.values.include?(event.event_type)
+        puts 'Exclude unpointable type ' + event.event_type
+        next
+      end
       post_downtime_date = event.event_time.to_date
       post_downtime_date -= 1 if event.event_time.hour < 11
       dates[post_downtime_date] = [] unless dates[post_downtime_date]
