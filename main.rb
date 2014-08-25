@@ -43,6 +43,10 @@ class Player
   def events_participated_in(events)
     participated_events = []
     events.each do |event|
+      unless $pointable_types.values.include?(event.event_type)
+        # puts 'Exclude unpointable type ' + event.event_type
+        next
+      end
       participated = false
       event.characters.each do |character|
         participated = true if character.player == self
@@ -52,6 +56,28 @@ class Player
     participated_events
   end
 
+  def nonevents_participated_in(events)
+    participated_events = []
+    events.each do |event|
+      unless $unpointable_types.values.include?(event.event_type)
+        # puts 'Exclude unpointable type ' + event.event_type
+        next
+      end
+      participated = false
+      event.characters.each do |character|
+        participated = true if character.player == self
+      end
+      participated_events << event if participated
+    end
+    participated_events
+  end
+
+  def nonevents_participated_value(events)
+    value = 0
+    nonevents_participated_in(events).each { |x| value += x.isk_per_player }
+    value
+  end
+
   def event_count_from(events)
     events_participated_in(events).count
   end
@@ -59,10 +85,6 @@ class Player
   def points_from(events, minimum_value)
     dates = {}
     events_participated_in(events).each do |event|
-      unless $pointable_types.values.include?(event.event_type)
-        puts 'Exclude unpointable type ' + event.event_type
-        next
-      end
       post_downtime_date = event.event_time.to_date
       post_downtime_date -= 1 if event.event_time.hour < 11
       dates[post_downtime_date] = [] unless dates[post_downtime_date]
@@ -255,7 +277,7 @@ def getMonthReport(monthNumber, year)
   @isk_total = @isk_total.floor
   @point_total = 0
   @max_points = 0
-  @players.each do|player|
+  @players.each do |player|
     player_points = player.points_from(@events, @config.minimum_point_value)
     @point_total += player_points
     @max_points = [@max_points, player_points].max
