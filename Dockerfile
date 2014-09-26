@@ -12,5 +12,5 @@ RUN passenger stop || true
 RUN mkdir -p /data
 
 WORKDIR /
-EXPOSE 4567
+EXPOSE 80
 ENTRYPOINT ["/docker-init.sh"]
