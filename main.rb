@@ -18,10 +18,11 @@ $pointable_types = {C5: 'C5 Site', C3: 'C3 Site', G: 'Gas', P: 'PVP', O: 'Other'
 $unpointable_types = {Ore: 'Ore Site'}
 $event_short_names = $pointable_types.merge($unpointable_types)
 $event_types = $event_short_names.values
+$db_path = settings.db_path
 
 use Rack::Session::Cookie, expire_after: 21_600, secret: settings.cookie_secret
 
-DataMapper.setup(:default, "sqlite3://#{Dir.pwd}/points.db")
+DataMapper.setup(:default, "sqlite3://" + $db_path)
 
 # Human player, owns many characters
 class Player

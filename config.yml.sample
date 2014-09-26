@@ -5,8 +5,7 @@ dev_mode: false # Do not enable this
 fake_igb_character: "" # Do not set this
 sha_salt: "set this to something" # Set this to something unique to your site
 cookie_secret: "please change this" # Also set to something unique (and different)
-
+db_path: 'points.db' # Change this to the path you want your sqlite DB
 # Only enable these for development work
 #dev_mode: true # Will create a "Default" user, who is an admin without needing to login
 #fake_igb_character: "Character Name" # Will pretend that the given user is logged in
-
