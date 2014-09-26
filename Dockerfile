@@ -9,7 +9,7 @@ ADD docker-init.sh /
 RUN chmod u+rwx /docker-init.sh
 RUN passenger start -d || true
 RUN passenger stop || true
-RUN mkdir /data
+RUN mkdir -p /data
 
 WORKDIR /
 EXPOSE 4567
