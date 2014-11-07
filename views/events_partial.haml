@@ -9,11 +9,7 @@
 		%th.togglable_players Characters
 		%th When
 		%th Submitted By
-		-if @show_approver
-			%th Approved by
 		%th
-		-if @allow_approval
-			%th
 		-if @allow_delete
 			%th
 	- @events.each do |event|
@@ -40,14 +36,9 @@
 
 			%td= event.getFormatDateTime()
 			%td= event.submission.player.name
-			-if @show_approver
-				%td= event.approval ? event.approval.player.name : "N/A"
 			%td
 				-if @logged_in_player and event.allow_edit(@logged_in_player, @isAdmin)
 					%a{:href => $base_url + '/edit_event/' + event.id.to_s + "/"} Edit
-			-if @allow_approval
-				%td
-					%a{:href => $base_url + '/approve_event/' + event.id.to_s + "/"} Approve
 			-if @allow_delete
 				%td
 					%a{:href => $base_url + '/delete_event/' + event.id.to_s + "/"} Delete

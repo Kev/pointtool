@@ -182,9 +182,12 @@ class Event
   end
 
   def allow_edit(player, is_admin)
-    return true if is_admin
-    return false if approval
-    submission.player == player
+    return is_admin
+    # Disable the previous (following) code because it allows unauthenticated editing
+    # - bad news if someone fakes IGB headers
+    # return true if is_admin
+    # # return false if approval
+    # submission.player == player
   end
 
   def isk_per_player
@@ -270,9 +273,7 @@ end
 
 def getMonthReport(monthNumber, year)
   @month = Date::MONTHNAMES[monthNumber]
-  @pendingEventCount = 0
   @events = getFilteredEvents(monthNumber, year, lambda do|event|
-      @pendingEventCount += 1 unless event.approval
       return event if event.approval
     end)
   @players = players_active_in(@events)
@@ -288,9 +289,9 @@ def getMonthReport(monthNumber, year)
     @max_points = [@max_points, player_points].max
   end
   @isk_point_average = (@point_total > 0 ? @isk_total / @point_total : 0).floor
-  @show_approver = checkIsAdmin
   @previous_link = getPreviousLink(monthNumber, year, '/month/')
   @next_link = getNextLink(monthNumber, year, '/month/')
+  @allow_delete = checkIsAdmin
   haml :month
 end
 
@@ -410,16 +411,11 @@ get '/my/:year/:month/' do
   @year = params[:year].to_i
   @month = Date::MONTHNAMES[monthNumber]
   @approved_events = []
-  @pending_events = []
   @all_events = getFilteredEvents(monthNumber, @year, lambda{|event|
     participated = false
     event.characters.each { |character| participated = true if character.player == @logged_in_player }
     if participated
-      if event.approval
-        @approved_events << event
-      else
-        @pending_events << event
-      end
+      @approved_events << event
     end
     event if participated})
   @points = @logged_in_player.points_from(@approved_events, @config.minimum_point_value)
@@ -483,6 +479,7 @@ def createOrEditEvent(params, create)
   if create
     submission = Submission.create(player: @logged_in_player, time: Time.new.utc)
     @event = Event.create(description: description, event_time: event_time, corner_value: corner_value, event_type: event_type, characters: characters, submission: submission)
+    Approval.create(player: @logged_in_player, event: @event)
     @message = 'Event created'
     @create_or_edit = 'Edit'
     @submit_relative_url = '/edit_event/' + @event.id.to_s + '/'
@@ -526,7 +523,7 @@ get '/edit_event/:id/' do
     @reason = 'Event ' + id + " doesn't exist"
     return haml :error
   end
-  if checkIsAdmin || (@event.submission.player == @logged_in_player && !@event.approval)
+  if checkIsAdmin || event.allow_edit(@logged_in_player)
     @create_or_edit = 'Edit'
     @submit_relative_url = '/edit_event/' + @event.id.to_s + '/'
     @charactersArray = allCharactersJSON
@@ -583,19 +580,6 @@ def renderAdminPage
   haml :admin
 end
 
-get '/approve_event/:id/' do
-  unless checkIsAdmin
-    @reason = 'Not Admin'
-    return haml :error
-  end
-  @allow_edit = true
-  @allow_approval = true
-
-  event = Event.first(id: params[:id])
-  Approval.create(player: @logged_in_player, event: event)
-  renderAdminPage
-end
-
 post '/set_minimum_point_value/' do
   config = Configuration.first
   unless checkIsAdmin
@@ -607,9 +591,6 @@ post '/set_minimum_point_value/' do
 end
 
 get '/admin/' do
-  @allow_approval = true
-  @allow_edit = true
-  @allow_delete = true
   unless checkIsAdmin
     @reason = 'Not Admin'
     return haml :error

@@ -9,8 +9,5 @@
 %h4 Approved Events (#{@approved_events.count})
 - @events = @approved_events
 = haml :events_partial
-%h4 Pending Events (#{@pending_events.count})
-- @events = @pending_events
-= haml :events_partial
 
 Giving #{@points} points.
