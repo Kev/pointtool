@@ -513,6 +513,7 @@ get '/delete_event/:id/' do
     return haml :error
   end
   event.attendances.destroy
+  event.approval.destroy if event.approval
   event.destroy
   redirect '/admin/'
 end
