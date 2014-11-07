@@ -47,6 +47,7 @@
 		%th Player
 		%th Corner Value
 	- @players.each do |player|
-		%tr
-			%td= player.name
-			%td= player.nonevents_participated_value(@events)
+		- if player.nonevents_participated_value(@events) > 0
+			%tr
+				%td= player.name
+				%td= player.nonevents_participated_value(@events)
