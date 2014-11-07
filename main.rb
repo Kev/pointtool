@@ -92,12 +92,16 @@ class Player
       dates[post_downtime_date] += [event]
     end
     points = 0
+    isk = 0
     dates.each do |_date, date_events|
       # puts "Looking at " + date.to_s + " for " + name
-      isk = 0
       date_events.each { |x| isk += x.isk_per_player }
       # puts "Found " + isk.to_s + " isk"
-      points += 1 if isk >= minimum_value
+      
+      if isk >= minimum_value
+          points += 1 
+          isk = 0
+      end
     end
     points
   end
