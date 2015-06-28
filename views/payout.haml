@@ -9,7 +9,6 @@
 	%a{:href => @next_link[:url]} Next Month (#{@next_link[:month]})
 %div Total estimated isk: #{@isk_total} million
 %div Total points earned: #{@point_total}
-%div Days escalations run: #{@escalation_day_count}
 %div Average isk contributed per point: #{@isk_point_average} million
 
 
@@ -30,22 +29,15 @@
 		- $event_short_names.each do |k, _v|
 			%th.hidable_cell= k.to_s + '&nbsp;' + (k.to_s.length == 1 ? '&nbsp;' : '')
 		%th Points
-		%th C5 %
+		%th %
 	- @players.each do |player|
 		%tr
 			%td= player.name
 			%td= player.event_count_from(@events)
 			- $event_short_names.each do |_k, v|
 				%td.hidable_cell= player.event_count_from(events_of_type(@events, v)) if player.event_count_from(events_of_type(@events, v)) > 0
-			%td= player.points_from(@events, @config)
-			%td= player.escalation_days_from(@events, @config) * 100 / (@max_escalations != 0 ? @max_escalations : 1)
-	%tr
-		%td SRP
-		%td
-		- $event_short_names.each do |_k, v|
-			%td.hidable_cell
-		%td= @escalation_day_count
-		%td 100
+			%td= player.points_from(@events, @config.minimum_point_value)
+			%td= player.points_from(@events, @config.minimum_point_value) * 100 / (@max_points != 0 ? @max_points : 1)
 
 %h3
 	Ore gathering

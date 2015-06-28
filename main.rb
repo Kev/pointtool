@@ -56,6 +56,10 @@ class Player
     end
     participated_events
   end
+  
+  def escalation_days_from(events, config)
+    getEscalationDaysFrom(events_participated_in(events)).count
+  end
 
   def nonevents_participated_in(events)
     participated_events = []
@@ -83,7 +87,7 @@ class Player
     events_participated_in(events).count
   end
 
-  def points_from(events, minimum_value)
+  def points_from(events, config)
     dates = {}
     events_participated_in(events).each do |event|
       post_downtime_date = event.event_time.to_date
@@ -94,13 +98,26 @@ class Player
     points = 0
     isk = 0
     dates.each do |_date, date_events|
-      # puts "Looking at " + date.to_s + " for " + name
-      date_events.each { |x| isk += x.isk_per_player }
-      # puts "Found " + isk.to_s + " isk"
-      
-      if isk >= minimum_value
-          points += 1 
-          isk = 0
+      day_isk = 0
+      day_points = 0
+      date_events.each { |x| day_isk += x.isk_per_player }
+      # Business rules:
+      # 1: If more than 800 million in a day, 3 points
+      if day_isk >= config.limit3
+          day_points = 3
+      elsif day_isk >= config.limit2
+          # 2: If more than 400 million in a day, 2 points
+          day_points = 2
+      else
+        # 3: If more than 120million, including previous rollovers, 1 point
+        isk += day_isk
+        if isk >= config.limit1
+          day_points = 1
+        end
+      end
+      if day_points > 0
+        points += day_points
+        isk = 0
       end
     end
     points
@@ -202,7 +219,18 @@ end
 class Configuration
   include DataMapper::Resource
   property :id, Serial
-  property :minimum_point_value, Float
+  property :limit1, Float
+  property :limit2, Float
+  property :limit3, Float
+end
+
+
+class ISKPool
+  include DataMapper::Resource
+  property :id, Serial
+  property :month_start, DateTime
+  property :pool, Float
+  property :expenses, Float
 end
 
 DataMapper::Model.raise_on_save_failure = true
@@ -215,6 +243,7 @@ Character.auto_upgrade!
 Submission.auto_upgrade!
 Approval.auto_upgrade!
 Configuration.auto_upgrade!
+ISKPool.auto_upgrade!
 
 def events_of_type(events, type)
   events.select { |event| event.event_type == type }
@@ -271,6 +300,24 @@ def getPreviousLink(monthNumber, year, prefix)
   Hash[url: url, month: month]
 end
 
+def getEscalationDaysFrom(events)
+  events_of_type(events, $pointable_types[:C5]).uniq{ |x| x[:event_time].to_date }
+end
+
+def processEventsForTotals(events, players, config)
+  result = {}
+  result[:escalation_day_count] = getEscalationDaysFrom(events).count
+  result[:point_total] = result[:escalation_day_count]
+  result[:max_escalations] = 0
+  players.each do |player|
+    player_points = player.points_from(events, config)
+    player_escalation_days = player.escalation_days_from(events, config)
+    result[:point_total] += player_points
+    result[:max_escalations] = [result[:max_escalations], player_escalation_days].max
+  end
+  result
+end
+
 def getMonthReport(monthNumber, year)
   @month = Date::MONTHNAMES[monthNumber]
   @events = getFilteredEvents(monthNumber, year, lambda do|event|
@@ -281,18 +328,34 @@ def getMonthReport(monthNumber, year)
   @events.each { |event| @isk_total += event.corner_value }
   @isk_total *= 0.8 # to allow for stuff selling below corner value
   @isk_total = @isk_total.floor
-  @point_total = 0
-  @max_points = 0
-  @players.each do |player|
-    player_points = player.points_from(@events, @config.minimum_point_value)
-    @point_total += player_points
-    @max_points = [@max_points, player_points].max
-  end
+  stats = processEventsForTotals(@events, @players, @config)
+  @escalation_day_count = stats[:escalation_day_count]
+  @point_total = stats[:point_total]
+  @max_escalations = stats[:max_escalations]
   @isk_point_average = (@point_total > 0 ? @isk_total / @point_total : 0).floor
   @previous_link = getPreviousLink(monthNumber, year, '/month/')
   @next_link = getNextLink(monthNumber, year, '/month/')
   @allow_delete = checkIsAdmin
+  
   haml :month
+end
+
+def getPayoutReport(year, monthNumber)
+  payout = getPoolForMonth(year, monthNumber)
+  @month = Date::MONTHNAMES[monthNumber]
+  @events = getFilteredEvents(monthNumber, year, lambda do|event|
+      return event if event.approval
+    end)
+  @players = players_active_in(@events)
+  @pool = payout[:pool]
+  @expenses = payout[:expenses]
+  stats = processEventsForTotals(@events, @players, @config)
+  @escalation_day_count = stats[:escalation_day_count]
+  @point_total = stats[:point_total]
+  @max_escalations = stats[:max_escalations]
+  @previous_link = getPreviousLink(monthNumber, year, '/payout/')
+  @next_link = getNextLink(monthNumber, year, '/payout/')
+  haml :payout
 end
 
 def getCurrentPlayer
@@ -349,9 +412,16 @@ def setLoggedInSession(player)
   end
 end
 
+def getPoolForMonth(year, month)
+  monthStart = DateTime.new(year, month, 1)
+  pool = ISKPool.first(:month_start => monthStart)
+  pool = ISKPool.create(:month_start => monthStart) unless pool
+  pool
+end
+
 before do
   if Configuration.count == 0
-    @config = Configuration.create(minimum_point_value: 80)
+    @config = Configuration.create(limit1: 120, limit2: 400, limit3: 800)
   else
     @config = Configuration.first
   end
@@ -418,7 +488,7 @@ get '/my/:year/:month/' do
       @approved_events << event
     end
     event if participated})
-  @points = @logged_in_player.points_from(@approved_events, @config.minimum_point_value)
+  @points = @logged_in_player.points_from(@approved_events, @config)
   @previous_link = getPreviousLink(monthNumber, @year, '/my/')
   @next_link = getNextLink(monthNumber, @year, '/my/')
   haml :my
@@ -433,6 +503,34 @@ get '/month/:year/:month/' do
   @month = params[:month].to_i
   @year = params[:year].to_i
   getMonthReport(@month, @year)
+end
+
+post '/payout/:year/:month/' do
+  @month = params[:month].to_i
+  @year = params[:year].to_i
+  if checkIsAdmin
+    payout = getPoolForMonth(@year, @month)
+    config.update(pool: params[:pool].to_f, expenses: params[:expenses].to_f)
+  else
+    @reason = 'No access'
+    return haml :error
+  end
+end
+
+get '/payout/:year/:month/' do
+  @month = params[:month].to_i
+  @year = params[:year].to_i
+  if checkIsAdmin
+    getPayoutReport(@year, @month)
+  else
+    @reason = 'No access'
+    return haml :error
+  end
+end
+
+get '/payout/' do
+  now = DateTime.now
+  redirect '/payout/' + now.year.to_s + '/' + now.month.to_s + '/'
 end
 
 get '/add_event/' do
@@ -581,13 +679,15 @@ def renderAdminPage
   haml :admin
 end
 
-post '/set_minimum_point_value/' do
+post '/set_minimum_point_values/' do
   config = Configuration.first
   unless checkIsAdmin
     @reason = 'No access'
     return haml :error
   end
-  config.update(minimum_point_value: params[:value].to_f)
+  config.update(limit1: params[:limit1].to_f)
+  config.update(limit2: params[:limit2].to_f)
+  config.update(limit3: params[:limit3].to_f)
   redirect '/admin/'
 end
 

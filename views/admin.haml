@@ -22,8 +22,12 @@
 		%input{:type => "text", :name =>"name"}
 		%input{:type => "submit", :value => "Add Player"}
 
-%form{ :action => $base_url + "/set_minimum_point_value/", :method => "post"}
+%form{ :action => $base_url + "/set_minimum_point_values/", :method => "post"}
 	%fieldset
-		%label Minimum Point Value:
-		%input{:type => "text", :name =>"value", :value => @config.minimum_point_value}
+		%label Minimum Point Value (rollover):
+		%input{:type => "text", :name =>"limit1", :value => @config.limit1}
+		%label Second point threshold (no rollover):
+		%input{:type => "text", :name =>"limit2", :value => @config.limit2}
+		%label Third point threshold (no rollover):
+		%input{:type => "text", :name =>"limit3", :value => @config.limit3}
 		%input{:type => "submit", :value => "Save"}
