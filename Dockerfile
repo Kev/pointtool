@@ -1,11 +1,14 @@
-FROM debian
+FROM debian:8
 MAINTAINER Kev
 VOLUME ["/data"]
 
-RUN apt-get update && apt-get install -y ruby git make ruby-dev libsqlite3-dev sqlite wget
-RUN cd / && git clone https://github.com/Kev/pointtool.git && cd /pointtool && gem install bundler && bundle install
-RUN gem install passenger
+RUN apt-get update && apt-get install -y ruby make ruby-dev libsqlite3-dev sqlite wget build-essential
+RUN mkdir /pointtool
+RUN gem install bundler passenger
+ADD Gemfile Gemfile.lock /pointtool/
+RUN cd /pointtool && bundle install
 ADD docker-init.sh /
+ADD . /pointtool
 RUN chmod u+rwx /docker-init.sh
 RUN passenger start -d || true
 RUN passenger stop || true

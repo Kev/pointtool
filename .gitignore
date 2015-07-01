@@ -38,3 +38,4 @@ build/
 points.db
 .pointtool.sublime-workspace
 config.yml
+push.sh

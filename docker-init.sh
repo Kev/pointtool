@@ -9,6 +9,6 @@ echo "cookie_secret: '$POINTTOOL_COOKIE_SECRET'" >> /pointtool/config.yml
 echo "db_path: '/data/points.db'" >> /pointtool/config.yml
 cd /pointtool
 # Want to do this, but haven't worked it out yet.
-# passenger start --port 80 -e production
+ passenger start --port 80 -e production
 # So instead just run the built-in webrick
-rackup -p 80
+#rackup -p 80
