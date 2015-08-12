@@ -56,7 +56,7 @@ class Player
     end
     participated_events
   end
-  
+
   def escalation_days_from(events, config)
     getEscalationDaysFrom(events_participated_in(events)).count
   end
@@ -336,25 +336,53 @@ def getMonthReport(monthNumber, year)
   @previous_link = getPreviousLink(monthNumber, year, '/month/')
   @next_link = getNextLink(monthNumber, year, '/month/')
   @allow_delete = checkIsAdmin
-  
+
   haml :month
 end
 
 def getPayoutReport(year, monthNumber)
   payout = getPoolForMonth(year, monthNumber)
+  @post_url = $base_url + "/payout/" + year.to_s + "/" + monthNumber.to_s + "/"
   @month = Date::MONTHNAMES[monthNumber]
   @events = getFilteredEvents(monthNumber, year, lambda do|event|
       return event if event.approval
     end)
-  @players = players_active_in(@events)
+  raw_players = players_active_in(@events)
   @pool = payout[:pool]
+  @pool = 0 unless @pool
   @expenses = payout[:expenses]
-  stats = processEventsForTotals(@events, @players, @config)
+  @expenses = 0 unless @expenses
+  stats = processEventsForTotals(@events, raw_players, @config)
   @escalation_day_count = stats[:escalation_day_count]
   @point_total = stats[:point_total]
   @max_escalations = stats[:max_escalations]
   @previous_link = getPreviousLink(monthNumber, year, '/payout/')
   @next_link = getNextLink(monthNumber, year, '/payout/')
+  @players = []
+  @max_escalation_bonus = 0.2
+  @pool_less_expenses = @pool - @expenses
+  @modified_point_total = (1 + @max_escalation_bonus) * @escalation_day_count # SRP
+  raw_players.each do |player_record|
+    player = {name: player_record.name}
+    player[:escalations] = 0 # Need to calculate number of points just from C5s # player_record.event_count_from(events_of_type(@events, $pointable_types[:C5]))
+    player[:escalation_bonus] = @max_escalation_bonus * (player_record.escalation_days_from(@events, @config) / (@max_escalations != 0 ? @max_escalations : 1))
+    player[:points] = player_record.points_from(@events, @config)
+    player[:other_points] = player[:points] - player[:escalations]
+    player[:adjusted_points] = player[:other_points] + player[:escalations] * (1 + player[:escalation_bonus])
+    @modified_point_total += player[:adjusted_points]
+    @players << player
+  end
+  @modified_point_value = @pool_less_expenses / @modified_point_total
+  players_payout = 0
+  @players.each do |player|
+    rounding = 10000000
+    payout = @modified_point_value * player[:adjusted_points]
+    player[:payout] = (payout / rounding).floor * rounding
+    players_payout += player[:payout]
+  end
+
+  @srp_payout = @pool_less_expenses - players_payout
+
   haml :payout
 end
 
@@ -510,7 +538,8 @@ post '/payout/:year/:month/' do
   @year = params[:year].to_i
   if checkIsAdmin
     payout = getPoolForMonth(@year, @month)
-    config.update(pool: params[:pool].to_f, expenses: params[:expenses].to_f)
+    payout.update(pool: params[:pool].to_f, expenses: params[:expenses].to_f)
+    redirect '/payout/' + @year.to_s + '=' + @month.to_s + '/'
   else
     @reason = 'No access'
     return haml :error
