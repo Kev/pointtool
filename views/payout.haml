@@ -13,36 +13,30 @@
 		%input{:type => "text", :name =>"pool", :value => @pool}
 		%label Expenses:
 		%input{:type => "text", :name =>"expenses", :value => @expenses}
+		Put the full value in to the pool and expenses (down to single isk)
 		%input{:type => "submit", :value => "Save"}
 
 %h3
 	Pool size:
 	=@pool_less_expenses
 
-	Modified Point Value:textile
-	=@modified_point_value
+	Point Value
+	=@point_value
 
 
 %table
 	%tr
 		%th Player
 		%th Points
-		%th C5 Points
-		%th C5 Point Bonus
-		%th Adjusted Points
 		%th Payout
 	%tr
 		%td SRP
 		%td= @escalation_day_count
-		%td= @escalation_day_count
-		%td= @max_escalation_bonus
-		%td= @escalation_day_count * (1 + @max_escalation_bonus)
 		%td= @srp_payout
 	- @players.each do |player|
 		%tr
 			%td= player[:name]
 			%td= player[:points]
-			%td= player[:escalations]
-			%td= player[:escalation_bonus]
-			%td= player[:adjusted_points]
 			%td= player[:payout]
+
+Total paid out: #{@players_payout}
