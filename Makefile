@@ -4,7 +4,7 @@ all: build
 build:
 	docker build -t pointtool .
 
-test: build
+test: destroy build
 	mkdir -p data
 	docker run -d -p 1081:80 -v `pwd`/data:/data --name pointtool pointtool
 

@@ -98,28 +98,10 @@ class Player
     points = 0
     isk = 0
     dates.each do |_date, date_events|
-      day_isk = 0
-      day_points = 0
-      date_events.each { |x| day_isk += x.isk_per_player }
-      # Business rules:
-      # 1: If more than 800 million in a day, 3 points
-      if day_isk >= config.limit3
-          day_points = 3
-      elsif day_isk >= config.limit2
-          # 2: If more than 400 million in a day, 2 points
-          day_points = 2
-      else
-        # 3: If more than 120million, including previous rollovers, 1 point
-        isk += day_isk
-        if isk >= config.limit1
-          day_points = 1
-        end
-      end
-      if day_points > 0
-        points += day_points
-        isk = 0
-      end
+      date_events.each { |x| isk += x.isk_per_player }
     end
+    points = isk / config.limit1
+    points = points.floor
     points
   end
 
@@ -715,8 +697,8 @@ post '/set_minimum_point_values/' do
     return haml :error
   end
   config.update(limit1: params[:limit1].to_f)
-  config.update(limit2: params[:limit2].to_f)
-  config.update(limit3: params[:limit3].to_f)
+  # config.update(limit2: params[:limit2].to_f)
+  # config.update(limit3: params[:limit3].to_f)
   redirect '/admin/'
 end
 
