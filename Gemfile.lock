@@ -60,11 +60,15 @@ GEM
     json (1.8.3)
     json_pure (1.8.2)
     multi_json (1.11.2)
+    passenger (5.0.30)
+      rack
+      rake (>= 0.8.1)
     rack (1.6.4)
     rack-protection (1.5.3)
       rack
     rack-test (0.6.3)
       rack (>= 1.0)
+    rake (11.3.0)
     sinatra (1.4.6)
       rack (~> 1.4)
       rack-protection (~> 1.4)
@@ -87,8 +91,10 @@ DEPENDENCIES
   data_mapper
   dm-sqlite-adapter
   haml
+  passenger
+  rack
   sinatra
   sinatra-contrib
 
 BUNDLED WITH
-   1.10.6
+   1.13.2
