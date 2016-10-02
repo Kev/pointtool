@@ -6,7 +6,7 @@ build:
 
 test: build
 	mkdir -p data
-	docker run -d -p 1080:80 -v `pwd`/data:/data --name pointtool pointtool
+	docker run -d -p 1081:80 -v `pwd`/data:/data --name pointtool pointtool
 
 log:
 	docker logs -f pointtool

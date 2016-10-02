@@ -4,7 +4,7 @@ VOLUME ["/data"]
 
 RUN apt-get update && apt-get install -y ruby make ruby-dev libsqlite3-dev sqlite wget build-essential
 RUN mkdir /pointtool
-RUN gem install bundler passenger
+RUN gem install bundler
 ADD Gemfile Gemfile.lock /pointtool/
 RUN cd /pointtool && bundle install
 ADD docker-init.sh /
